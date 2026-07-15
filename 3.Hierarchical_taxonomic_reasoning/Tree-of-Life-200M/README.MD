@@ -344,7 +344,7 @@ The ten splits, with the parameters each requires. Deviations from the defaults 
 | Mammals-10K | class | Mammalia | 20 | 512 | no | |
 | Reptiles-10K | class | ('Squamata',<br>'Testudines',<br>'Crocodylia',<br>'Sphenodontia') | 20 | 512 | **yes** | Only split requiring the flag — see note below. |
 
-### Why Reptiles needs --skip_order
+### Why Reptiles needs `--skip_order`
 
 TreeOfLife-200M resolves taxonomy against the **GBIF Backbone**, which follows the Catalogue of Life.
 COL adopted a revised vertebrate classification that eliminates paraphyletic groups and **promoted the
@@ -373,7 +373,7 @@ but the models are reproducing textbook Linnaean taxonomy. That gap is a finding
 recency, not a labeling defect, and deserves a sentence in the methods stating that the benchmark
 follows the ToL-200M/GBIF backbone.
 
-### Why Fish is six classes
+### Why Fish has six classes
 
 The same COL restructuring applies. **Actinopterygii is also paraphyletic** and does not exist as a
 single usable class value covering all fishes in this backbone. "Fish" is itself paraphyletic as a
@@ -389,13 +389,7 @@ explicitly:
 | Coelacanthi | Coelacanths |
 | Dipneusti | Lungfishes |
 
-Unlike Reptiles, these rows **do** carry a populated `order`, so no `--skip_order` is required. Before
-adding or removing a class here, confirm the value exists at class rank in your catalog copy:
-
-```sql
-SELECT class, COUNT(*) FROM read_parquet('<PATH>/catalog.parquet')
-WHERE phylum = 'Chordata' GROUP BY class ORDER BY 2 DESC;
-```
+Unlike Reptiles, these rows **do** carry a populated `order`, so no `--skip_order` is required. 
 
 ---
 
