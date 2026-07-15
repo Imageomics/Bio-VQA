@@ -1,4 +1,4 @@
-<h1 align="center">Tree-of-Life-200M &rarr; Bio-VQA</h1>
+<h1 align="center">Bio-VQA: Tree-of-Life-200M &rarr</h1>
 
 <p align="center">
   <b>Hierarchical Taxonomic Reasoning &mdash; Data Acquisition &amp; QA Generation Pipeline</b>
@@ -21,7 +21,7 @@ metadata-complete image corpora of ~10K images each, drawn from the
 [TreeOfLife-200M](https://huggingface.co/datasets/imageomics/TreeOfLife-200M) catalog, and the
 visual-question-answering pairs derived from their taxonomic labels.
 
-The pipeline is deliberately **three small, single-responsibility scripts** rather than one monolith:
+The pipeline:
 
 | Stage | Script | Responsibility |
 | :---: | :--- | :--- |
@@ -221,10 +221,6 @@ python download.py \
   size floor both hold — there are plenty of species to draw from.
 - **Species-poor taxa** (Gymnosperms: ~1K accepted species worldwide): 10K images cannot be reached at
   20/species. Raise the cap to 100 and drop the floor to 256 KB.
-
-Rule of thumb: `stop_limit ≲ n_valid_species × images_per_species × success_rate`, where `success_rate`
-is typically 0.5–0.8 depending on how many source URLs are dead or undersized. If Stage 1 finishes
-short, that inequality was violated.
 
 ---
 
@@ -443,7 +439,7 @@ once the audit is clean.
 | Component | Deterministic? | Mechanism |
 | :--- | :---: | :--- |
 | Species selection (Stage 1) | ✅ | Deterministic SQL, ordered by frequency. |
-| Image selection (Stage 1) | ❌ | `df.sample(frac=1)` is unseeded, and thread interleaving decides which downloads win the race to `stop_limit`. **Two runs will not give identical manifests.** |
+| Image selection (Stage 1) | ❌ | Thread interleaving decides which downloads win the race to `stop_limit`. **Two runs will not give identical manifests.** |
 | Verification (Stage 2) | ✅ | Pure read. |
 | QA generation (Stage 3) | ✅ | `RANDOM_SEED = 42`, **re-seeded per file** before processing, so a given manifest always yields the same templates, distractors, and option order — regardless of how many files precede it in the walk. |
 
@@ -453,21 +449,6 @@ images) rather than expecting to regenerate them byte-for-byte.
 
 If you need reproducible downloads, seed the sampler — `group_df.sample(frac=1, random_state=42)` — and
 run single-threaded. Expect it to be dramatically slower.
-
----
-
-## Troubleshooting
-
-| Symptom | Cause | Fix |
-| :--- | :--- | :--- |
-| `[INFO] Found 0 species with valid metadata.` | Rank/value mismatch — most often Reptiles filtered on `class`. | Verify the value exists at that rank: `SELECT DISTINCT class FROM read_parquet('…') LIMIT 50`. |
-| Final CSV rows &lt; `stop_limit`; `❌ ERROR: Mismatch` | Candidate pool exhausted: too few species × cap, or the size floor rejected too much. | Raise `--images_per_species`, lower `--min_size_kb`, or accept a smaller split. |
-| Job OOM-kills during `[STEP 1]` | The materialization step pulls all candidate rows into a pandas DataFrame; broad taxa (Insecta) are large. | Increase `--mem-per-cpu`, or narrow the taxon value. |
-| Downloads crawl; many failures | Source hosts throttling, or dead URLs (the catalog indexes historical records). | Lower `--threads`; a nontrivial failure rate is expected and normal. |
-| `verify.py` reports missing `order` | Split was downloaded with `--skip_order`. | Expected. Any *other* missing rank is a real bug — Stage 1's SQL should have excluded those rows. |
-| `generateQA.py` skips a file | Discovery matches the literal `-10K.csv` suffix only. | Rename the manifest to `<Taxon>-10K.csv`. |
-| `KeyError: 'common_name'` | Manifest lacks the `common` column entirely. | Confirm you're reading the TreeOfLife-200M catalog and not a re-exported subset that dropped columns. |
-| Truncated / corrupt images | A file passed the size floor but the transfer was incomplete. | The size gate is a heuristic, not a decoder. Add a Pillow `verify()` pass if it bites. |
 
 ---
 
