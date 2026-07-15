@@ -494,33 +494,49 @@ run single-threaded. Expect it to be dramatically slower.
 ## FAQ
 
 **Why cap images per species?**
-Without a cap, frequency-ordered selection is brutally long-tailed — a handful of charismatic species
-would dominate the split and the benchmark would measure recall of *Turdus migratorius*, not taxonomic
-reasoning. The cap forces breadth.
+Occurrence records in TreeOfLife-200M are distributed with a pronounced long tail: observation
+frequency is governed by collector effort, geographic accessibility, and taxonomic charisma rather than
+by any property relevant to visual recognition. Under unconstrained frequency-ordered selection, a
+small number of over-represented species would account for a disproportionate share of each split, and
+measured accuracy would substantially reflect memorization of those species rather than taxonomic
+inference. The `--images_per_species` cap enforces an approximately uniform per-species allocation,
+trading total instance count for taxonomic coverage. The parameter is exposed per taxon because the
+species-richness of the candidate pool varies by two orders of magnitude across the ten splits.
 
-**Why the file-size floor?**
-`source_url` fields point at whatever the provider served, including 3 KB thumbnails and 404 pages
-returned with a 200. Size is a cheap, effective first-pass filter. Tune it per taxon: bird photography
-is high-resolution; herbarium bryophyte scans often are not.
 
-**Why does the sanity check compare CSV rows to file count?**
-Because the failure mode is silent. Threads racing toward `stop_limit` can write files after the stop
-signal, and a crashed writer can leave rows without files. Stage 1's cleanup plus the count assertion
-turn that into a loud, immediate failure.
+**Why the file-size threshold?**
+The catalog stores provider URLs rather than image bytes; the response returned at retrieval time is
+not guaranteed to be the record's primary image. Observed failure modes include thumbnail
+surrogates, provider placeholder graphics, and error pages served with HTTP 200. File size is a weak
+but computationally negligible proxy for image validity, applied as a first-pass filter prior to any
+decoding. The threshold is taxon-specific because baseline image resolution correlates with collection
+modality: photographic records of vertebrates are typically higher-resolution than digitized herbarium
+sheets or microscopy of bryophyte material. The threshold does not verify decodability; downstream
+consumers requiring that guarantee should add an explicit decode pass.
 
-**Can I re-run a single taxon?**
-Yes — each taxon directory is independent. `download.py` opens the manifest in `'w'` mode, so a re-run
-truncates and rebuilds it, and stray-image cleanup removes the previous run's orphans.
-
-**Why is `species` asked as "species epithet"?**
-Because the catalog's `species` column holds the epithet (`catesbeianus`), not the binomial. Asking
-"what is the species?" would score a correct binomial as wrong.
 
 **Are the MCQ distractors really hard?**
-As hard as the split allows. The pool widens genus → family → order → class and stops as soon as it has
-three candidates, so a species with congeners in the corpus gets congeneric distractors. Rare species
-fall back further, and in the worst case to a global sample — those items are easy. If you need a
-uniform difficulty guarantee, filter the MCQ items by distractor rank.
+The multiple-choice item at the `common_name` level draws distractors from the union of the common-name
+sets associated with the row's genus, family, order, and class. **The pools are unioned, not consulted
+in order of increasing taxonomic distance**, and the three distractors are then sampled uniformly from
+that union. Because the class-level set is the largest by a wide margin, the sampling distribution is
+dominated by it: for a split defined at class rank, the effective distractor distribution approximates
+a uniform draw over the entire split. Congeneric and confamilial distractors are possible but not
+preferentially selected, and item difficulty is consequently neither controlled nor graded.
+ 
+Two further properties follow from the implementation:
+ 
+- Where fewer than three candidates are available in the union, the pool is supplemented from the
+  dataset-wide name list, further reducing expected difficulty for taxonomically isolated species.
+- For Reptiles, the `order` lookup contributes nothing, since that rank is unpopulated in the source
+  backbone (see [Why Reptiles needs --skip_order](#why-reptiles-needs---skip_order)).
+Answer position is randomized, so positional bias does not confound the item.
+ 
+Users requiring controlled difficulty should modify the distractor routine to consult the rank-specific
+pools in ascending order of taxonomic distance and to record the rank from which each distractor was
+drawn, permitting stratified analysis. As implemented, the MCQ items are best interpreted as a
+coarse-grained recognition probe rather than a fine-grained discrimination task.
+
 
 ---
 
