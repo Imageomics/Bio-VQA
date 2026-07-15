@@ -334,15 +334,15 @@ The ten splits, with the parameters each requires. Deviations from the defaults 
 | Split | taxon_rank | taxon_value | images_per_species | min_size_kb | skip_order | Notes |
 | :--- | :--- | :--- | :---: | :---: | :---: | :--- |
 | Amphibians-10K | class | Amphibia | 20 | 512 | no | |
-| Angiosperms-10K | class | ('Magnoliopsida','Liliopsida') | 20 | 512 | no | Dicots + monocots. |
+| Angiosperms-10K | class | ('Magnoliopsida',<br>'Liliopsida') | 20 | 512 | no | Dicots + monocots. |
 | Arachnids-10K | class | Arachnida | 20 | 512 | no | |
 | Birds-10K | class | Aves | 20 | 1024 | no | Highest floor — bird imagery is abundant and high-res. |
 | Bryophytes-10K | phylum | Bryophyta | 20 | 512 | no | Filters on **phylum**, not class. |
-| Fish-10K | class | ('Actinopterygii','Teleostei','Elasmobranchii','Holocephali','Coelacanthi','Dipneusti') | 20 | 512 | no | Six classes — see note below. |
+| Fish-10K | class | ('Actinopterygii',<br>'Teleostei',<br>'Elasmobranchii',<br>'Holocephali',<br>'Coelacanthi',<br>'Dipneusti') | 20 | 512 | no | Six classes — see note below. |
 | Gymnosperms-10K | class | Pinopsida | **100** | **256** | no | Species-poor — both knobs relaxed to reach 10K. |
 | Insects-10K | class | Insecta | 20 | 512 | no | |
 | Mammals-10K | class | Mammalia | 20 | 512 | no | |
-| Reptiles-10K | class | ('Squamata','Testudines','Crocodylia','Sphenodontia') | 20 | 512 | **yes** | Only split requiring the flag — see note below. |
+| Reptiles-10K | class | ('Squamata',<br>'Testudines',<br>'Crocodylia',<br>'Sphenodontia') | 20 | 512 | **yes** | Only split requiring the flag — see note below. |
 
 ### Why Reptiles needs --skip_order
 
