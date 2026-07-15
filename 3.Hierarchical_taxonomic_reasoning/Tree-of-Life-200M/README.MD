@@ -331,32 +331,71 @@ Discovery is by suffix: `*-10K.csv` in, `*-10K-QA.csv` out, alongside the input.
 
 The ten splits, with the parameters each requires. Deviations from the defaults are called out.
 
-| Split | `--taxon_rank` | `--taxon_value` | `--images_per_species` | `--min_size_kb` | Notes |
-| :--- | :--- | :--- | :---: | :---: | :--- |
-| `Amphibians-10K` | `class` | `Amphibia` | 20 | 512 | |
-| `Angiosperms-10K` | `class` | `('Magnoliopsida','Liliopsida')` | 20 | 512 | Dicots + monocots. |
-| `Arachnids-10K` | `class` | `Arachnida` | 20 | 512 | |
-| `Birds-10K` | `class` | `Aves` | 20 | 1024 | Highest floor — bird imagery is abundant and high-res. |
-| `Bryophytes-10K` | `phylum` | `Bryophyta` | 20 | 512 | Filters on **phylum**, not class. |
-| `Fish-10K` | `class` | `('Actinopterygii','Teleostei')` | 20 | 512 | |
-| `Gymnosperms-10K` | `class` | `Pinopsida` | **100** | **256** | Species-poor — both knobs relaxed to reach 10K. |
-| `Insects-10K` | `class` | `Insecta` | 20 | 512 | |
-| `Mammals-10K` | `class` | `Mammalia` | 20 | 512 | |
-| `Reptiles-10K` | `order` | `('Squamata','Testudines','Crocodylia','Sphenodontia')` | 20 | 512 | See note below. Use `--skip_order`. |
+| Split | taxon_rank | taxon_value | images_per_species | min_size_kb | skip_order | Notes |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- |
+| Amphibians-10K | class | Amphibia | 20 | 512 | no | |
+| Angiosperms-10K | class | ('Magnoliopsida','Liliopsida') | 20 | 512 | no | Dicots + monocots. |
+| Arachnids-10K | class | Arachnida | 20 | 512 | no | |
+| Birds-10K | class | Aves | 20 | 1024 | no | Highest floor — bird imagery is abundant and high-res. |
+| Bryophytes-10K | phylum | Bryophyta | 20 | 512 | no | Filters on **phylum**, not class. |
+| Fish-10K | class | ('Actinopterygii','Teleostei','Elasmobranchii','Holocephali','Coelacanthi','Dipneusti') | 20 | 512 | no | Six classes — see note below. |
+| Gymnosperms-10K | class | Pinopsida | **100** | **256** | no | Species-poor — both knobs relaxed to reach 10K. |
+| Insects-10K | class | Insecta | 20 | 512 | no | |
+| Mammals-10K | class | Mammalia | 20 | 512 | no | |
+| Reptiles-10K | class | ('Squamata','Testudines','Crocodylia','Sphenodontia') | 20 | 512 | **yes** | Only split requiring the flag — see note below. |
 
-> ### ⚠️ The Reptilia problem
->
-> Reptilia is **paraphyletic** — no single modern class value captures it, so the split is defined as a
-> union of the four extant reptile *orders*. Two consequences:
->
-> 1. **`--taxon_rank` must be `order`**, not `class`. Filtering `class IN ('Squamata',…)` matches
->    nothing, and Stage 1 will happily report *"Found 0 species"* and produce an empty manifest.
-> 2. Pass **`--skip_order`** if you also want to relax the `order IS NOT NULL` completeness check for
->    this split. Note that when filtering *on* order, the flag is redundant — a row matching the filter
->    necessarily has a non-null order. It is retained as an escape hatch for any taxon where `order` is
->    sparsely populated upstream.
->
-> If a reptile run returns zero species, check the rank before anything else.
+### Why Reptiles needs --skip_order
+
+TreeOfLife-200M resolves taxonomy against the **GBIF Backbone**, which follows the Catalogue of Life.
+COL adopted a revised vertebrate classification that eliminates paraphyletic groups and **promoted the
+former reptile orders — Squamata, Testudines, Crocodylia — to class rank**. Reptilia is retained only as
+a synonym.
+
+Two consequences for this pipeline:
+
+1. `--taxon_rank` is **class**, not order. `Squamata` and friends are class values in this backbone.
+2. Because those taxa were promoted *out of* order rank, the `order` column is **empty for every reptile
+   row** — family now sits directly under class. Stage 1's completeness filter requires all ranks
+   non-null, so without `--skip_order` the query returns **zero species**. The flag drops `order` from
+   that check and nothing else.
+
+This is the **only** split where the flag is needed. It is not a data error and not a download bug — the
+manifest is faithfully reporting the source taxonomy.
+
+Downstream, reptile rows yield **8 QA pairs instead of 9** (no order question). This is correct
+behavior: `generateQA.py` skips null ranks by design. Any tooling that assumes six populated ranks —
+e.g. a `dropna(subset=RANKS)` on a taxonomy tree builder — will silently drop every reptile. Allow
+skip-edges instead.
+
+One thing worth noting for the paper: models answering **Reptilia** to "what is the class?" are marked
+wrong against this ground truth. The ground truth is defensible — it is what the source backbone says —
+but the models are reproducing textbook Linnaean taxonomy. That gap is a finding about training-data
+recency, not a labeling defect, and deserves a sentence in the methods stating that the benchmark
+follows the ToL-200M/GBIF backbone.
+
+### Why Fish is six classes
+
+The same COL restructuring applies. **Actinopterygii is also paraphyletic** and does not exist as a
+single usable class value covering all fishes in this backbone. "Fish" is itself paraphyletic as a
+concept — there is no clade containing all fishes that excludes tetrapods — so the split is assembled
+explicitly:
+
+| Class | Covers |
+| :--- | :--- |
+| Actinopterygii | Ray-finned fishes |
+| Teleostei | Teleosts, where the backbone resolves them separately |
+| Elasmobranchii | Sharks, rays, skates |
+| Holocephali | Chimaeras |
+| Coelacanthi | Coelacanths |
+| Dipneusti | Lungfishes |
+
+Unlike Reptiles, these rows **do** carry a populated `order`, so no `--skip_order` is required. Before
+adding or removing a class here, confirm the value exists at class rank in your catalog copy:
+
+```sql
+SELECT class, COUNT(*) FROM read_parquet('<PATH>/catalog.parquet')
+WHERE phylum = 'Chordata' GROUP BY class ORDER BY 2 DESC;
+```
 
 ---
 
