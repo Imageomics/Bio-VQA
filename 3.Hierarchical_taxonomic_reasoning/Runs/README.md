@@ -10,7 +10,6 @@
   <img alt="Scheduler" src="https://img.shields.io/badge/scheduler-SLURM-red">
   <img alt="Models" src="https://img.shields.io/badge/models-18-brightgreen">
 </p>
----
 
 ## Table of Contents
  
@@ -21,6 +20,7 @@
 - [Environments](#environments)
 - [Running](#running)
 - [Chunking and SLURM Arrays](#chunking-and-slurm-arrays)
+
 ---
 
  
