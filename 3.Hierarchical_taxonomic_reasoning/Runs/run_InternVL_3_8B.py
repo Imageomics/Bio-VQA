@@ -102,7 +102,7 @@ def main():
     parser.add_argument("--batch_size", default=8, type=int)
     parser.add_argument("--chunk_id", default=0, type=int)
     parser.add_argument("--num_chunks", default=1, type=int)
-    parser.add_argument("--model_id", default="OpenGVLab/InternVL3-8B-Instruct"", type=str)
+    parser.add_argument("--model_id", default="OpenGVLab/InternVL3-8B-Instruct", type=str)
     parser.add_argument("--max_num", default=12, type=int,
                         help="max image tiles; lower (e.g. 6) to save memory on big models")
     parser.add_argument("--use_flash_attn", action="store_true",
