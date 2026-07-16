@@ -188,7 +188,7 @@ Every runner applies the same defenses against a corpus assembled from heterogen
 | `ImageFile.LOAD_TRUNCATED_IMAGES = True` | Permits decoding of incompletely transferred files. |
 | `img.verify()` + OpenCV fallback | Files that fail PIL verification are re-tried as video containers; the first frame is extracted to a chunk-scoped temporary file. Some records served under an image URL are in fact video. |
 | Chunk-scoped temp filenames | `temp_frame_chunk{chunk_id}_row{idx}.jpg` prevents collisions between concurrent array tasks sharing a working directory. |
-| Per-row `try/except` | An unreadable row logs and continues rather than aborting the job. **See [Known Issues](#known-issues)** — the recovery path has an alignment defect. |
+| Per-row `try/except` | An unreadable row logs and continues rather than aborting the job. |
  
 ---
  
