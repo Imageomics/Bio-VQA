@@ -46,7 +46,6 @@ The pipeline:
 - [Taxon Configurations](#taxon-configurations)
 - [Running on a SLURM Cluster](#running-on-a-slurm-cluster)
 - [Reproducibility](#reproducibility)
-- [Troubleshooting](#troubleshooting)
 - [FAQ](#faq)
 - [Citation](#citation)
 
