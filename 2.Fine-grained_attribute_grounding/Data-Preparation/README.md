@@ -41,18 +41,18 @@
  
 ## 1. Overview
  
-This component of **BioVQA** converts the *Caltech-UCSD Birds-200-2011* (CUB-200-2011) annotation corpus into a large-scale multiple-choice and open-ended visual question answering benchmark that probes four distinct competencies:
+This component of **Bio-VQA** transforms the *Caltech-UCSD Birds-200-2011* (CUB-200-2011) annotation corpus into a large-scale multiple-choice and open-ended visual question answering benchmark spanning four competencies:
  
 | Competency | Probe |
 | --- | --- |
-| **Taxonomy & Naming** | Can the model recover common name, folk category, genus, and binomial nomenclature from pixels alone? |
+| **Relative Salience** | Among several traits true of the taxon, which is *most prominently visible in this image*? |
 | **Morphological Attributes** | Can the model read off discrete traits — bill shape, plumage colour, wing pattern, tail length? |
-| **Relative Salience** | Among several traits true of the taxon, can the model identify which is *most prominently visible in this image*? |
 | **Anatomical Localization** | Can the model report part **visibility**, and resolve a **visual prompt** — a coloured marker overlaid on the image — to the anatomical part beneath it? |
+| **Taxonomy & Naming** | Can the model recover common name, folk category, genus, and binomial nomenclature from pixels alone? |
  
-The reference build yields **824,104 questions over 11,788 photographs** (each contributing one source image and one marker-annotated derivative, for 23,576 image files on disk); see §10 for the full composition.
+The release comprises **824,104 questions over 11,788 photographs** drawn from **200 species**. Each photograph contributes one source image and one marker-annotated derivative, for 23,576 image files on disk. Full composition in §10.
  
-The pipeline is deliberately **three-staged and file-mediated**: each stage writes a durable, inspectable artifact to disk, so any stage may be re-run, audited, or replaced without recomputing the others.
+The pipeline is **three-staged and file-mediated**: each stage writes a durable, inspectable artifact, so any stage may be re-run, audited, or replaced without recomputing the others.
  
 ```
 CUB-200-2011 raw annotations
@@ -70,21 +70,19 @@ CUB-200-2011 raw annotations
  
 ---
  
-## 2. Motivation and Design Philosophy
+## 2. Design Principles
  
-Three principles govern the construction of this corpus.
+**Denormalize once, query forever.** CUB-200-2011 ships as a constellation of whitespace-delimited index files joined on integer keys. Stage 1 performs this join once and materializes a single wide table in which every image carries its class, taxon, bounding box, split assignment, full attribute dictionary (with annotator certainty *and* confidence score), and complete part-location record. Downstream consumers never touch the raw files again.
  
-**(i) Denormalize once, query forever.** CUB-200-2011 ships as a constellation of whitespace-delimited index files that must be joined on integer keys. Stage 1 performs this join exactly once and materializes a single wide table in which every image carries its class, taxon, bounding box, split assignment, full attribute dictionary (with annotator certainty *and* confidence score), and complete part-location record. Downstream consumers never touch the raw files again.
+**Distractors are drawn from the empirical trait vocabulary, not invented.** Every multiple-choice item builds its distractor pool from the *observed* value set of the relevant attribute group — or, for salience items, from the global trait vocabulary — excluding all values true of the current image. Distractors are therefore plausible ornithological alternatives rather than nonsense strings, and are *genuinely* incorrect: a distractor is never a trait the annotators marked present.
  
-**(ii) Distractors are drawn from the empirical trait vocabulary, not invented.** Every multiple-choice item constructs its distractor pool from the *observed* value set of the relevant attribute group — or, for salience items, from the global trait vocabulary — excluding all values true of the current image. This guarantees distractors are (a) plausible ornithological alternatives rather than nonsense strings, and (b) *genuinely* incorrect: a distractor is never a trait the annotators marked present.
+**Grounding requires a controlled visual confound.** In the visually-prompted localization task, a marker of a given *(colour, shape)* is drawn on the target part and a battery of decoys is scattered across the image. The decoy set always contains **at least one marker sharing the target's colour but not its shape**, so colour alone is insufficient — conjunction binding is required.
  
-**(iii) Grounding requires a controlled visual confound.** For the visually-prompted localization task a marker of a given *(colour, shape)* is drawn on the target part, and a battery of decoys is scattered across the image. Critically, the decoy set always contains **at least one marker sharing the target's colour but not its shape**, so a model cannot succeed by attending to colour alone. Conjunction binding is required.
+**Answer spaces are narrow by construction, so evaluation is chance-adjusted.** With 15 anatomical parts and ~300 attribute values, per-item chance is non-trivial and varies across items. C2 is scored with **CAGS** (Chance-Adjusted Graded Score) rather than raw accuracy.
  
 ---
  
-## 3. Repository Layout
- 
-The three scripts are referred to throughout by the following canonical names. Rename your local copies to match, or substitute freely.
+## 3. Pipeline Contents
  
 | Script | Role |
 | --- | --- |
@@ -98,25 +96,24 @@ Stages 1 and 2 each declare a module-level constant:
 BASE_DIR = "/path/to/your/dataset/directory"   # ← EDIT THIS
 ```
  
-`BASE_DIR` must point at the **extracted `CUB_200_2011/` directory** (see §4). It is the single source of truth for every path in the pipeline; set it in both scripts before running anything.
+`BASE_DIR` must point at the **extracted `CUB_200_2011/` directory** (§4). It is the single source of truth for every path in the pipeline; set it in both scripts before running anything.
  
 ---
  
 ## 4. Step 0 — Obtaining the CUB-200-2011 Dataset
  
-**Download the CUB dataset first.** The pipeline reads nothing from the network and will fail immediately if the raw annotations are absent.
+**Download the CUB dataset first.** The pipeline reads nothing from the network and will halt if the raw annotations are absent.
  
-CUB-200-2011 (Wah, Branson, Welinder, Perona & Belongie, 2011) comprises **11,788 images** spanning **200 North American bird species**, annotated with **312 binary attributes**, **15 part locations**, and one bounding box per image.
+CUB-200-2011 (Wah, Branson, Welinder, Perona & Belongie, 2011) comprises **11,788 images** across **200 North American bird species**, annotated with **312 binary attributes**, **15 part locations**, and one bounding box per image.
  
 ```bash
-# Canonical distribution (Caltech Data / CVL):
 wget https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz
 tar -xzvf CUB_200_2011.tgz
 ```
  
 ### Expected post-extraction layout
  
-Upon extraction you must be able to resolve the following, **relative to `BASE_DIR`**:
+Upon extraction the following must resolve, **relative to `BASE_DIR`**:
  
 ```
 BASE_DIR/                                  # ← CUB_200_2011/
@@ -141,10 +138,10 @@ BASE_DIR/                                  # ← CUB_200_2011/
 ├── bounding_boxes.txt                     # BBOX_FILE
 ├── train_test_split.txt                   # SPLIT_FILE
 │
-└── taxon_name_mapping.json                # SCI_MAP_FILE — user-supplied, see §5
+└── taxon_name_mapping.json                # SCI_MAP_FILE — see §5
 ```
  
-which corresponds exactly to the constant block at the head of Stage 1:
+corresponding exactly to the constant block at the head of Stage 1:
  
 ```python
 ATTR_FILE        = os.path.join(BASE_DIR, "attributes/image_attribute_labels.txt")
@@ -159,7 +156,7 @@ PART_LOCS_FILE   = os.path.join(BASE_DIR, "parts/part_locs.txt")
 SPLIT_FILE       = os.path.join(BASE_DIR, "train_test_split.txt")
 ```
  
-> **Note on `attributes.txt`.** Some CUB releases place `attributes.txt` at the *archive root*, one level **above** `CUB_200_2011/`, rather than inside `attributes/`. If Stage 1 reports an empty attribute-name mapping, move or symlink it into place:
+> **Note on `attributes.txt`.** Some CUB releases place `attributes.txt` at the *archive root*, one level **above** `CUB_200_2011/`, rather than inside `attributes/`. If Stage 1 reports an empty attribute-name mapping, move it into place:
 > ```bash
 > mv attributes.txt "$BASE_DIR/attributes/attributes.txt"
 > ```
@@ -174,15 +171,15 @@ wc -l "$BASE_DIR/attributes/image_attribute_labels.txt"  # ~3,677,856
 find "$BASE_DIR/images" -name '*.jpg' | wc -l            # 11788
 ```
  
-The attribute label file is the heavyweight: roughly **3.68 M rows** (11,788 images × 312 attributes). Expect Stage 1 to spend most of its wall-clock there.
+The attribute label file is the heavyweight: roughly **3.68 M rows** (11,788 images × 312 attributes). Stage 1 spends most of its wall-clock there.
  
 ---
  
 ## 5. Step 0.5 — The Taxon Name Mapping File
  
-CUB-200-2011 supplies **common names only**, encoded in the directory prefixes (`001.Black_footed_Albatross`). BioVQA additionally asks for **scientific name** and **genus**, which requires an external mapping.
+CUB-200-2011 supplies **common names only**, encoded in the directory prefixes (`001.Black_footed_Albatross`). Bio-VQA additionally asks for **scientific name** and **genus**, which requires an external mapping.
  
-Create `BASE_DIR/taxon_name_mapping.json` as a flat object keyed on the *cleaned* common name — the class string with its numeric prefix stripped and underscores replaced by spaces:
+`BASE_DIR/taxon_name_mapping.json` is a flat object keyed on the *cleaned* common name — the class string with its numeric prefix stripped and underscores replaced by spaces:
  
 ```json
 {
@@ -197,15 +194,23 @@ Create `BASE_DIR/taxon_name_mapping.json` as a flat object keyed on the *cleaned
 **Semantics.**
  
 - A **two-word** value (`"Phoebastria nigripes"`) yields *both* a scientific-name question and a genus question.
-- A **one-word** value yields a genus question only; the script logs the first such occurrence as a diagnostic.
+- A **one-word** value yields a genus question only; the first such occurrence is logged as a diagnostic.
 - A missing key resolves to the sentinel `"Unknown"`, and **no** nomenclature question is emitted for that image.
-If the file is absent entirely, Stage 1 prints a warning and proceeds — every taxon becomes `"Unknown"`, silently suppressing the entire Taxonomy & Naming axis. **Verify the warning does not appear** in your run.
+If the file is absent, Stage 1 warns and proceeds — every taxon becomes `"Unknown"`, suppressing the entire Taxonomy & Naming axis. Confirm the warning does not appear.
+ 
+Audit coverage before generating:
+ 
+```python
+attrs = pd.read_csv(f"{BASE_DIR}/CUB200_attributes.csv")
+print(attrs[attrs.taxon == "Unknown"].class_name.unique())                     # mapping gaps
+print(attrs[attrs.class_name.str.split().str.len() < 2].class_name.unique())   # 1-word names
+```
+ 
+Both directly determine the size of the naming axis (§10.4).
  
 ---
  
 ## 6. Environment and Dependencies
- 
-Consistent with the wider BioVQA HPC workflow, use the existing `myenv_py312` environment; do not create a new one unless strictly necessary.
  
 ```bash
 source /path/to/myenv_py312/bin/activate
@@ -215,24 +220,24 @@ python -c "import pandas, numpy, cv2; print(pandas.__version__, cv2.__version__)
 | Package | Used by | Purpose |
 | --- | --- | --- |
 | `pandas` | 1, 2, 3 | Tabular join, explode, normalize |
-| `numpy` | 1 | Transitive numeric support |
+| `numpy` | 1 | Numeric support |
 | `opencv-python` | 2 | Image I/O and marker rasterization |
  
-Standard library only otherwise (`os`, `json`, `random`, `uuid`, `math`, `argparse`).
+Standard library otherwise (`os`, `re`, `json`, `random`, `uuid`, `math`, `argparse`).
  
 ### Resource envelope
  
-| Stage | Wall-clock (typical) | Peak RSS | Disk written |
+| Stage | Wall-clock | Peak RSS | Disk written |
 | --- | --- | --- | --- |
-| 1 | ~10–25 min (dominated by `iterrows` over 3.68 M attribute rows) | ~4–8 GB | ~1–2 GB (`CUB200_attributes.csv`) |
-| 2 | ~20–60 min (dominated by per-image decode/encode) | ~2 GB | ~1 GB images + ~200 MB CSV |
+| 1 | ~10–25 min | ~4–8 GB | ~1–2 GB (`CUB200_attributes.csv`) |
+| 2 | ~20–60 min | ~2 GB | ~1 GB images + ~200 MB CSV |
 | 3 | seconds | ~1 GB | ~4 KB |
  
-Stages 1 and 2 are single-threaded and CPU-bound. On the SLURM cluster a standard (non-GPU) node suffices; request generous **memory** rather than generous cores.
+Stages 1 and 2 are single-threaded and CPU-bound. A standard (non-GPU) SLURM node suffices; request generous **memory** rather than generous cores.
  
 ---
  
-## 7. Stage 1 — Building the Consolidated Attribute Table
+## 7. Stage 1 — Consolidated Attribute Table
  
 ```bash
 python build_attribute_table.py
@@ -241,23 +246,23 @@ python build_attribute_table.py
  
 ### What it does
  
-The script is a sequence of small, defensive loaders, each of which tolerates malformed lines rather than aborting.
+A sequence of defensive loaders, each tolerating malformed lines rather than aborting.
  
-**`load_attributes()`** parses `image_attribute_labels.txt` into a five-column frame `(image_id, attr_id, present, certainty, score)`. Rows with fewer than five whitespace-delimited fields, or which fail integer/float coercion, are counted and skipped; the tally is printed. This matters: a handful of lines in the canonical release carry an extra trailing field, and naive split-and-unpack parsers crash on them. Note the deliberate use of `parts[-1]` for `score` — anchoring on the *last* field rather than index 4 makes the parse robust to exactly that extra column.
+**`load_attributes()`** parses `image_attribute_labels.txt` into `(image_id, attr_id, present, certainty, score)`. Rows with fewer than five whitespace-delimited fields, or failing numeric coercion, are counted and skipped; the tally is printed. A handful of lines in the canonical release carry an extra trailing field, so `score` is read from `parts[-1]` rather than index 4 — anchoring on the *last* field makes the parse robust to that column.
  
 **`load_simple_mapping()`** is a generic `int → value` reader over any two-column file (`classes.txt`, `images.txt`, `attributes.txt`, `certainties.txt`, `image_class_labels.txt`, `train_test_split.txt`), splitting on the *first* delimiter only so values containing spaces survive intact.
  
-**`load_bboxes()`** returns `{image_id: [x, y, w, h]}` in absolute pixel coordinates (CUB convention: top-left origin, width/height in pixels).
+**`load_bboxes()`** returns `{image_id: [x, y, w, h]}` in absolute pixels (CUB convention: top-left origin).
  
-**`load_parts()`** returns a nested dict `{image_id: {part_name: {visible, x, y}}}`. Coordinates of **non-visible** parts are zeroed rather than retained — CUB stores undefined values there, and propagating them would poison any downstream geometric reasoning.
+**`load_parts()`** returns `{image_id: {part_name: {visible, x, y}}}`. Coordinates of **non-visible** parts are zeroed rather than retained — CUB stores undefined values there, and propagating them would corrupt downstream geometric reasoning.
  
-**`build_trait_dict()`** inverts the long-format attribute frame into, per image, a dictionary:
+**`build_trait_dict()`** inverts the long-format attribute frame into, per image:
  
 ```json
 { "has_bill_shape::dagger": { "present": 1, "certainty": "definitely", "score": 4.0 }, ... }
 ```
  
-Attribute IDs are 1-indexed in CUB and are decremented on lookup. Certainty integers are resolved to their string labels (`not visible`, `guessing`, `probably`, `definitely`) via `certainties.txt`, preserving annotator confidence as a first-class field rather than discarding it.
+Attribute IDs are 1-indexed in CUB and decremented on lookup. Certainty integers resolve to their string labels (`not visible`, `guessing`, `probably`, `definitely`) via `certainties.txt`, preserving annotator confidence as a first-class field rather than discarding it.
  
 ### Output columns
  
@@ -273,7 +278,7 @@ Attribute IDs are 1-indexed in CUB and are decremented on lookup. Certainty inte
 | `attributes` | **JSON string** | Full 312-key trait dictionary with certainty and score |
 | `parts` | **JSON string** | 15-key part dictionary with visibility and coordinates |
  
-`attributes` and `parts` are serialized as JSON *inside* CSV cells. This keeps the artifact a single flat file at the cost of an escaping layer — see §14.
+`attributes` and `parts` are serialized as JSON *inside* CSV cells, keeping the artifact a single flat file at the cost of an escaping layer.
  
 ---
  
@@ -285,14 +290,14 @@ python generate_qa.py
 # → BASE_DIR/Images_Annotated/*.jpg
 ```
  
-`random.seed(42)` is set at import. See §13 for what this does and does not guarantee.
+`random.seed(42)` is set at import (§13).
  
 ### 8.1 Global vocabulary construction
  
-Before any question is written, the script sweeps the entire corpus twice:
+Before any question is written, the corpus is swept twice:
  
-- **`category_pool`** — the set of terminal words across all 200 common names (`Albatross`, `Warbler`, `Kingfisher`, …). This is the folk-taxonomic vocabulary from which *"What type of bird is this?"* distractors are drawn.
-- **`build_attribute_pools()`** — yields `group_pool` (`{attribute group → observed values}`, e.g. `wing color → [blue, brown, …]`) and `full_trait_pool` (the flat `"group: value"` vocabulary spanning all groups).
+- **`category_pool`** — the set of terminal words across all 200 common names (`Albatross`, `Warbler`, `Kingfisher`, …). The folk-taxonomic vocabulary from which *"What type of bird is this?"* distractors are drawn.
+- **`build_attribute_pools()`** — yields `group_pool` (`{attribute group → observed values}`, e.g. `wing color → [blue, brown, …]`) and `full_trait_pool` (the flat `"group: value"` vocabulary across all groups).
 The `has_size::` group is **excluded throughout**. Absolute size is not recoverable from a cropped photograph without a scale reference, so size questions would be unanswerable in principle and would depress scores for reasons orthogonal to perception.
  
 ### 8.2 Per-image question families
@@ -301,78 +306,68 @@ The `has_size::` group is **excluded throughout**. Absolute size is not recovera
  
 - `"What is the common name of the bird?"` → free-form.
 - `"What type of bird is this in the image?"` → 5-way MCQ over `category_pool`.
-- `"What kind of {category} is the bird in this image?"` → free-form, but *scaffolded*: the folk category is given, so only the modifier must be produced. The contrast between this and the bare common-name question isolates how much of the recognition failure is retrieval versus discrimination.
+- `"What kind of {category} is the bird in this image?"` → free-form, but *scaffolded*: the folk category is given, so only the modifier must be produced. The contrast with the bare common-name question isolates retrieval failure from discrimination failure.
 - `"What is the scientific name of the bird?"` → free-form binomial.
 - `"What is the genus of the bird?"` → free-form.
-**(b) Morphological attributes — grouped MCQ.** For every attribute group with at least one `present == 1` value, one 5-way MCQ is emitted: the key is sampled from the true values, and up to four distractors are sampled from `group_pool[group]` *minus all true values*. When an image is annotated with several values in a group (birds are genuinely multi-coloured), any one is an acceptable key — the distractor exclusion guarantees no alternative is secretly correct.
+**(b) Morphological attributes — grouped MCQ.** For every attribute group with at least one `present == 1` value, one 5-way MCQ: the key is sampled from the true values, up to four distractors from `group_pool[group]` *minus all true values*. When an image carries several values in a group — birds are genuinely multi-coloured — any one is an acceptable key, and the exclusion guarantees no alternative is secretly correct.
  
-**(c) Relative salience — global MCQ.** For every trait clearing the confidence bar (`certainty == "definitely"` **or** `score ≥ 4.0`), an item asks which of five traits is *most prominently visible*. Distractors are drawn from `full_trait_pool` minus **all** traits present on the image — a much stronger exclusion than (b), since a distractor from a different attribute group could otherwise be trivially true.
+**(c) Relative salience — global MCQ.** For every trait clearing the confidence bar (`certainty == "definitely"` **or** `score ≥ 4.0`), an item asks which of five traits is *most prominently visible*. Distractors are drawn from `full_trait_pool` minus **all** traits present on the image — a stronger exclusion than (b), since a distractor from a different attribute group could otherwise be trivially true.
  
-**(d) Part visibility — paired.** For `eye`, `leg`, and `wing`, one 4-way MCQ over `{Left, Right, Both, None}`, derived from the left/right visibility flags. This probes lateral discrimination, a known failure mode: a bird in profile has exactly one visible eye, and models routinely answer *"Both"*.
+**(d) Part visibility — paired.** For `eye`, `leg`, and `wing`, one 4-way MCQ over `{Left, Right, Both, None}` derived from the left/right visibility flags. This probes lateral discrimination: a bird in profile has exactly one visible eye, and models routinely answer *"Both"*.
  
-**(e) Part visibility — triadic.** Up to ten 5-way items of the form *"Which of the following parts are visible?"* with options `(A)(B)(C) {parts}, (D) None, (E) All three`. The generator deliberately schedules an **all-hidden** item (answer `D`) and an **all-visible** item (answer `E`) first, then fills the remainder with 1-visible / 2-hidden triads. Without this scheduling `D` and `E` would be near-empty answer classes and the family would be gameable by never selecting them.
+**(e) Part visibility — triadic.** Ten 5-way items per image of the form *"Which of the following parts are visible?"* with options `(A)(B)(C) {parts}, (D) None, (E) All three`. The generator schedules an **all-hidden** item (answer `D`) and an **all-visible** item (answer `E`) first, then fills the remainder with 1-visible / 2-hidden triads. Without this scheduling `D` and `E` would be near-empty answer classes and the family would be gameable by never selecting them.
  
 ### 8.3 Visually-prompted localization
  
-This is the most differentiated task family in C2, and the only one that mutates pixels.
+The most differentiated task family in C2, and the only one that mutates pixels.
  
 For each image with at least one visible part:
  
-1. **Target selection.** A visible part is sampled uniformly; a `(colour, shape)` is sampled from `{blue, green, red, white, yellow} × {dot, cross, plus, star}`.
-2. **Target rendering.** `draw_mark()` rasterizes the marker at the part's annotated coordinate at `size=12` — deliberately larger than every decoy (`size=10`), so the target is not *hidden*, merely *confusable*.
-3. **Decoy battery.** Decoys are placed at random positions subject to a **minimum-separation constraint** (`is_far_enough`, `min_dist=40 px`, up to 100 rejection-sampling attempts), preventing overlap that would render a marker unreadable.
-4. **The colour confound.** The decoy list is *seeded* with a `(target_colour, non-target_shape)` pair. Consequently the target colour appears at least twice per image with different shapes, and the conjunction of colour **and** shape — not either feature alone — is required to disambiguate. This is the single most important design decision in the task.
-5. **Option construction.** Options are assembled with a deliberate difficulty gradient: the target's **contralateral partner** (`left eye` ↔ `right eye`) is inserted first when applicable, then hidden parts, then other visible parts, until four distractors are held; the target is appended and the list shuffled.
-6. **Persistence.** The composite is written to `Images_Annotated/{basename}_{uuid5}.jpg`, and a row is emitted with `image_id` set to the 5-hex UUID — a *string*, distinct from the integer IDs of unmodified images (see §14).
-The resulting item reads:
+1. **Target selection.** A visible part is sampled uniformly; a `(colour, shape)` from `{blue, green, red, white, yellow} × {dot, cross, plus, star}`.
+2. **Target rendering.** `draw_mark()` rasterizes the marker at the part's annotated coordinate at `size=12` — larger than every decoy (`size=10`), so the target is not *hidden*, merely *confusable*.
+3. **Decoy battery.** Decoys are placed at random positions under a **minimum-separation constraint** (`is_far_enough`, `min_dist=40 px`, up to 100 rejection-sampling attempts), preventing overlap that would render a marker unreadable.
+4. **The colour confound.** The decoy list is *seeded* with a `(target_colour, non-target_shape)` pair, so the target colour recurs with a different shape and the conjunction of colour **and** shape is required to disambiguate. This is the central design decision of the task.
+5. **Option construction.** Options follow a deliberate difficulty gradient: the target's **contralateral partner** (`left eye` ↔ `right eye`) is inserted first where applicable, then hidden parts, then other visible parts, until four distractors are held; the target is appended and the list shuffled.
+6. **Persistence.** The composite is written to `Images_Annotated/{source_stem}_{uuid5}.jpg`.
+A resulting item:
  
-> *What is the body part of this bird marked with the red star?*
-> *Options: (A) left leg, (B) throat, (C) nape, (D) right eye, (E) belly*
+> *What is the body part of this bird marked with the yellow star?*
+> *Options: (A) crown, (B) left eye, (C) right leg, (D) left leg, (E) belly*
  
 ### 8.4 Explosion and categorization
  
-The nested `qa_pairs` lists are `explode()`-ed and `json_normalize()`-ed into one row per question. `filename` is rewritten to a `BASE_DIR`-relative path (`images/…` or `Images_Annotated/…`), and `categorize_qa_metadata()` assigns each question to one of the four axes by ordered substring matching on the lowercased question text — order matters, as `"most prominently visible"` must be tested before the more general `"are visible in this image"`.
+Nested `qa_pairs` lists are `explode()`-ed and `json_normalize()`-ed into one row per question. `filename` is rewritten to a `BASE_DIR`-relative path (`images/…` or `Images_Annotated/…`), and `categorize_qa_metadata()` assigns each question to one of the four axes by ordered substring matching on the lowercased stem (§11).
  
 ---
  
 ## 9. Stage 3 — Corpus Statistics
  
-Unlike Stages 1 and 2, this script takes its input path on the command line:
+Unlike Stages 1 and 2, this script takes its input on the command line:
  
 ```bash
 python dataset_stats.py --csv_path "$BASE_DIR/QA.csv"
 # → BASE_DIR/data-stats.txt   (written beside the CSV)
+ 
+# Optional: keep sensitivity runs from overwriting one another
+python dataset_stats.py --csv_path "$BASE_DIR/QA.csv" --out_name stats-v2.txt
 ```
  
 The report comprises four blocks:
  
-1. **High-level metrics** — total QA pairs; distinct *photographs*; source vs. annotated file counts; mean/max/min questions per image.
-2. **Species metrics** — unique species, photographs per species, questions per species (min/max/mean).
-3. **Structural analysis** — MCQ vs. open-ended (detected by the literal `"Options:"` marker), binary Yes/No share, visually-prompted share, and **answer-key letter balance**.
-4. **Per-category breakdown** — count, share, unique stems, unique answers, MCQ/open-ended split, and photograph coverage per axis.
-### 9.1 The species-resolution fix
+1. **High-level metrics** — total QA pairs; distinct photographs; source vs. annotated file counts; questions per photograph and per image.
+2. **Species metrics** — unique species; photographs per species; questions per species (mean, min, max).
+3. **Structural analysis** — MCQ vs. open-ended (detected by the literal `"Options:"` marker), binary Yes/No share, visually-prompted share, and answer-key letter balance.
+4. **Per-category breakdown** — count, share, unique stems, unique answers, MCQ/open split, and photograph coverage per axis.
+### 9.1 Photographs vs. image files
  
-> ⚠️ **The original Stage 3 mis-reported blocks [1] and [2].** It derived species with
-> ```python
-> x.split('/')[1]
-> ```
-> which silently assumes a **two-level** path. Only source rows have one:
->
-> | Row type | `filename` | `split('/')[1]` |
-> | --- | --- | --- |
-> | Source | `images/001.Black_footed_Albatross/Black_Footed_Albatross_0046_18.jpg` | `001.Black_footed_Albatross` ✅ |
-> | Annotated | `Images_Annotated/Black_Footed_Albatross_0046_18_63ac2.jpg` | `Black_Footed_Albatross_0046_18_63ac2.jpg` ❌ |
->
-> `Images_Annotated/` is **flat**, so index `[1]` lands on the filename — which is unique per image by construction (it embeds a UUID). Every annotated image therefore registered as its own species:
->
-> ```
-> 11,988 unique "species"  =  200 real species  +  11,788 annotated filenames
-> 23,576 unique "images"   =  11,788 photographs counted twice (raw + marked)
-> ```
->
-> Both errors propagate: `Average Images per Species` collapsed to 1.97 and `Average Questions per Species` to 68.74, because the denominator was inflated ~60×.
+The corpus references two kinds of path, and the distinction governs every rate in the report:
  
-**The fix.** Species must be *recovered* for annotated rows rather than parsed. Because Stage 2 names its output `{source_stem}_{uuid5}.jpg`, the source stem is reachable by stripping the suffix and joining back onto the source rows:
+| Row type | `filename` | Depth |
+| --- | --- | --- |
+| Source | `images/001.Black_footed_Albatross/Black_Footed_Albatross_0046_18.jpg` | two-level, species in path |
+| Annotated | `Images_Annotated/Black_Footed_Albatross_0046_18_63ac2.jpg` | flat, no species component |
+ 
+Because `Images_Annotated/` is flat, species cannot be parsed from an annotated path. It is instead *recovered*: Stage 2 names its output `{source_stem}_{uuid5}.jpg`, so stripping the suffix and joining onto the source stems restores the species.
  
 ```python
 UUID_SUFFIX = re.compile(r"_[0-9a-f]{5}$", re.IGNORECASE)
@@ -382,188 +377,93 @@ src_species = df.loc[~is_annot, "filename"].str.split("/").str[1]
 src_stems   = df.loc[~is_annot, "filename"].map(stem_of)
 stem_to_species = dict(zip(src_stems, src_species))
  
-raw     = df.loc[is_annot, "filename"].map(stem_of)
-strip   = raw.str.replace(UUID_SUFFIX, "", regex=True)
-# fall back to the unstripped stem if the strip overshoots
-annot_stems = strip.where(strip.isin(stem_to_species), raw)
+raw         = df.loc[is_annot, "filename"].map(stem_of)
+strip       = raw.str.replace(UUID_SUFFIX, "", regex=True)
+annot_stems = strip.where(strip.isin(stem_to_species), raw)   # fall back if strip overshoots
 ```
  
-This introduces the distinction the original conflated:
+This yields two quantities that must not be conflated:
  
-| Concept | Meaning |
-| --- | --- |
-| **Distinct photographs** | Underlying CUB images — the correct denominator for per-image and per-species rates |
-| **Image files referenced** | Files on disk, i.e. photographs + marker renders |
+| Concept | Value | Meaning |
+| --- | ---: | --- |
+| **Distinct photographs** | 11,788 | Underlying CUB images — the correct denominator for per-image and per-species rates |
+| **Image files referenced** | 23,576 | Files on disk: photographs + marker renders |
  
-Rows that resolve to neither are labelled `Unresolved`, counted, and surfaced in both the report and stderr — a silent miscount is precisely the failure being fixed, so the corrected script fails loudly instead.
+Rows resolving to neither are labelled `Unresolved`, counted in the report, and echoed to stderr.
  
-### 9.2 Other corrections in the fixed script
+### 9.2 Answer-key handling
  
-- **Answer-key letters are stripped before counting uniques.** The original counted `"(A) crown"` and `"(C) crown"` as two distinct answers, inflating `Unique Answers` by the letter permutation. The fix splits `(X) text` and counts `text`.
-- **Answer-key balance is now reported.** A skewed letter distribution is a genuine leakage channel — a model that always answers `(C)` should not clear chance. Verify the distribution is near-uniform before reporting accuracy.
-- **Division-by-zero guards** on empty frames and empty categories.
-- **Schema validation** — missing required columns are reported rather than raising a bare `KeyError`.
-- **`--out_name`** added, so sensitivity runs don't overwrite each other.
-### 9.3 Reported vs. corrected
+MCQ answers are stored as `(C) crown`. The letter is split from the text before counting, so `Unique Answers` reflects the **semantic** answer space rather than the letter permutation — `(A) crown` and `(C) crown` are one answer, not two.
  
-| Metric | Original (wrong) | Corrected |
-| --- | ---: | ---: |
-| Unique species | 11,988 | **200** |
-| Unique images | 23,576 | **11,788** photographs (23,576 files) |
-| Images per species | 1.97 | **58.94** |
-| Questions per species | 68.74 | **4,120.52** |
-| Questions per image | 34.96 | **69.91** per photograph |
- 
-Totals in blocks [3] and [4] — 824,104 questions, the 94.4/5.6 MCQ split, and the per-axis counts — were **unaffected**, as none of them touch the species path. Only the image and species denominators were wrong.
+The letter distribution itself is reported. A skewed answer key is a leakage channel: a model that always emits `(C)` should not clear chance. Confirm near-uniformity before reporting accuracy.
  
 ---
  
-## 10. Reference Run — Reported Corpus Composition
+## 10. Dataset Composition
  
-The figures below are the verbatim output of Stage 3 on the reference build, and are the numbers reported in the paper. Reproduce them by re-running the pipeline as documented; any deviation indicates a divergent `taxon_name_mapping.json`, an incomplete image tree, or an un-cleared `Images_Annotated/` (see §13). Run the **corrected** Stage 3 from §9.1 — the raw block below predates that fix.
- 
-<details>
-<summary><b><code>data-stats.txt</code> — click to expand the raw report</b></summary>
-
- ```text
-=====================================================================
-             CUB-200 FINE-GRAINED VQA DATASET STATISTICS
-=====================================================================
- 
-[1] HIGH-LEVEL METRICS
------------------------------------------------------------------
-Total QA Pairs                  : 824,104
-Total Unique Images             : 23,576
-Average Questions per Image     : 34.96
-Max Questions on a Single Image : 115
-Min Questions on a Single Image : 1
- 
-[2] BIRD SPECIES / CLASS METRICS
------------------------------------------------------------------
-Total Unique Bird Species       : 11,988
-Average Images per Species      : 1.97
-Average Questions per Species   : 68.74
- 
-[3] QUESTION STRUCTURAL ANALYSIS
------------------------------------------------------------------
-Multiple-Choice Questions       : 777,729 (94.4%)
-Open-Ended Questions            : 46,375 (5.6%)
-Binary (Yes/No) Answers         : 0 (0.0%)
- 
-[4] DETAILED CATEGORY BREAKDOWN
------------------------------------------------------------------
-➤ Relative Salience:
-   • Total Questions : 321,073 (39.0%)
-   • Unique Questions: 321,073
-   • Unique Answers  : 1,533
-   • Multiple-Choice : 321,073
-   • Open-Ended      : 0
- 
-➤ Morphological Attributes:
-   • Total Questions : 280,433 (34.0%)
-   • Unique Questions: 194,790
-   • Unique Answers  : 317
-   • Multiple-Choice : 280,433
-   • Open-Ended      : 0
- 
-➤ Anatomical Localization:
-   • Total Questions : 165,032 (20.0%)
-   • Unique Questions: 14,462
-   • Unique Answers  : 80
-   • Multiple-Choice : 165,032
-   • Open-Ended      : 0
- 
-➤ Taxonomy & Naming:
-   • Total Questions : 57,566 (7.0%)
-   • Unique Questions: 11,254
-   • Unique Answers  : 818
-   • Multiple-Choice : 11,191
-   • Open-Ended      : 46,375
- 
-=====================================================================
-```
- 
-</details>
-
-
 ### 10.1 Headline figures
  
 | Quantity | Value |
-| --- | --- |
+| --- | ---: |
 | Total QA pairs | **824,104** |
 | Distinct photographs | **11,788** |
-| Image files referenced | **23,576** (11,788 source + 11,788 marker-annotated) |
+| Image files referenced | **23,576** |
 | Source species | **200** |
-| Mean questions per photograph | 69.91 |
-| Question span per image | 1 – 115 |
-| Multiple-choice share | 777,729 (94.4%) |
-| Open-ended share | 46,375 (5.6%) |
+| Questions per photograph | **69.91** |
+| Photographs per species | **58.94** |
+| Questions per species | **4,120.52** |
+| Multiple-choice | 777,729 (94.4%) |
+| Open-ended | 46,375 (5.6%) |
+| Binary (Yes/No) | 0 (0.0%) |
+| Visually-prompted (marker) items | 11,788 (1.4%) |
  
 ### 10.2 Axis composition
  
-| Axis | Questions | Share | Unique stems | Unique answers | MCQ | Open |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Relative Salience | 321,073 | 39.0% | 321,073 | 1,533 | 321,073 | 0 |
-| Morphological Attributes | 280,433 | 34.0% | 194,790 | 317 | 280,433 | 0 |
-| Anatomical Localization | 165,032 | 20.0% | 14,462 | 80 | 165,032 | 0 |
-| Taxonomy & Naming | 57,566 | 7.0% | 11,254 | 818 | 11,191 | 46,375 |
-| **Total** | **824,104** | **100%** | — | — | **777,729** | **46,375** |
+| Axis | Questions | Share | Unique stems | MCQ | Open |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Relative Salience | 321,073 | 39.0% | 321,073 | 321,073 | 0 |
+| Morphological Attributes | 280,433 | 34.0% | 194,790 | 280,433 | 0 |
+| Anatomical Localization | 165,032 | 20.0% | 14,462 | 165,032 | 0 |
+| Taxonomy & Naming | 57,566 | 7.0% | 11,254 | 11,191 | 46,375 |
+| **Total** | **824,104** | **100%** | — | **777,729** | **46,375** |
  
-### 10.3 Reading the numbers
+### 10.3 Structure of the corpus
  
-Several of these figures are structurally informative and worth reproducing in the paper's dataset section rather than merely reporting.
+**Every photograph yielded a grounding item.** `23,576 = 2 × 11,788`. Annotated images are emitted only when a source image has ≥1 visible part, so the visible-part precondition holds universally across CUB — no image was skipped.
  
-**Every source image yielded a grounding item.** `23,576 = 2 × 11,788`. Since annotated images are emitted only when a source image has ≥1 visible part, this confirms the visible-part precondition holds universally across CUB — no image was skipped.
- 
-**The triadic visibility budget saturated.** Anatomical Localization decomposes exactly:
+**Anatomical Localization decomposes exactly.**
  
 ```
   35,364   paired visibility     (11,788 × 3: eye, leg, wing)
-+117,880   triadic visibility    (11,788 × 10 — the full per-image cap)
++117,880   triadic visibility    (11,788 × 10 — the full per-image budget)
 + 11,788   marker localization   (11,788 × 1)
 ─────────
- 165,032   ✓
+ 165,032
 ```
  
-The triadic family hit its ten-item ceiling on **every** image, meaning the `continue` fallback in the loop never fired. This is worth stating explicitly: the family is budget-limited, not data-limited, and could be scaled up or down by a single constant.
+The triadic family reaches its ten-item budget on every image: it is budget-limited, not data-limited, and scales by a single constant.
  
-**Annotation density per image.** Dividing by 11,788: **27.24** traits per image clear the salience confidence bar (`definitely` or `score ≥ 4.0`), and **23.79** attribute groups per image carry at least one present value. The latter is the effective count of the 28-ish CUB attribute groups minus `has_size` (excluded) and those with no positive label.
+**Annotation density per photograph.** Dividing by 11,788: **27.24** traits clear the salience confidence bar (`definitely` or `score ≥ 4.0`), and **23.79** attribute groups carry at least one present value — the effective count of CUB's attribute groups minus `has_size` (excluded) and those with no positive label.
  
-**Stem uniqueness is a diagnostic, not a defect.** Relative Salience has 321,073 unique stems for 321,073 questions — every item's five-option string is distinct, because distractors are sampled from a 1,533-value global vocabulary. Anatomical Localization has only 14,462 stems for 165,032 questions: the part vocabulary is 15 items, so option sets collide heavily by combinatorial necessity. Neither figure implies duplication of *items* — an identical stem paired with a different image is a different question. Report stem counts alongside image counts to avoid this being misread.
+**Stem uniqueness reflects vocabulary size, not duplication.** Relative Salience has one unique stem per question, because distractors are sampled from a 1,533-value global vocabulary. Anatomical Localization has 14,462 stems across 165,032 questions: the part vocabulary is 15 items, so option sets collide by combinatorial necessity. An identical stem paired with a different photograph is a different item; stem counts should always be read alongside photograph counts.
  
-**Answer-space width.** Morphological Attributes has 317 unique answers ≈ the 312 CUB attributes minus the excluded `has_size` values; Anatomical Localization has 80 ≈ (15 parts + `None` + `All three`) × letter prefixes. The narrow answer space is why C2 is evaluated with **CAGS** rather than raw accuracy — chance performance is non-trivial and varies per item, and must be normalized out against each item's distractor pool.
- 
-**`Min = 1` is the annotated subset.** Marker-localization files carry exactly one question each, which is what dragged the pre-fix mean down to 34.96 — that figure divided by *files*, not photographs. Three denominators are available, and the paper must say which it uses:
+**Questions per photograph.** Three denominators are available; the paper reports the second:
  
 | Denominator | Value | Questions each |
 | --- | ---: | ---: |
 | Image files on disk | 23,576 | 34.96 |
-| Distinct photographs (all items) | 11,788 | **69.91** |
-| Distinct photographs (source items only) | 11,788 | 68.91 |
+| Distinct photographs, all items | 11,788 | **69.91** |
+| Distinct photographs, source items only | 11,788 | 68.91 |
  
-The middle row is the defensible headline: it counts every question against the photograph it depicts, without double-counting a photograph because it was rendered twice.
+The middle row counts every question against the photograph it depicts, without double-counting a photograph rendered twice.
  
-### 10.4 Blocks [1] and [2] above are superseded
+### 10.4 The naming axis
  
-**Do not cite blocks [1] or [2] of the raw report.** They were produced by the pre-fix Stage 3 and carry the species-resolution bug dissected in §9.1: `11,988 = 200 + 11,788` and `23,576 = 2 × 11,788`. Re-run the corrected `dataset_stats.py` and cite that output instead — the numbers in §10.1 and §10.3 already reflect the correction.
+The naming axis is smaller than the naive ceiling, and the gap is structural:
  
-Blocks [3] and [4] are unaffected and may be cited as printed.
- 
-### 10.5 The Taxonomy & Naming shortfall
- 
-The naming axis emits fewer items than the naive ceiling, and the gap is diagnostic rather than noise:
- 
-- **MCQ = 11,191**, not 11,788. The `"What type of bird is this?"` item requires a common name of ≥2 words to extract a folk category. **597 images** have single-word class names and are skipped.
-- **Open-ended = 46,375**, against a ceiling of `11,788 × 4 = 47,152` (common name, *kind-of*, scientific name, genus). The **777-item** shortfall is the union of those same 597 single-word names (which also suppress the *kind-of* item) and images whose `taxon` resolved to `Unknown` or to a single word.
-Both gaps trace to `taxon_name_mapping.json` coverage and to class-name morphology. Before submission, audit them explicitly:
- 
-```python
-attrs = pd.read_csv(f"{BASE_DIR}/CUB200_attributes.csv")
-print(attrs[attrs.taxon == "Unknown"].class_name.unique())              # mapping gaps
-print(attrs[attrs.class_name.str.split().str.len() < 2].class_name.unique())  # 1-word names
-```
- 
-An `Unknown` count above zero means the naming axis is silently under-sampled for those species, which biases any per-species breakdown. Fix the mapping rather than the statistics.
+- **MCQ = 11,191**, not 11,788. The `"What type of bird is this?"` item requires a common name of ≥2 words to extract a folk category; **597 images** have single-word class names and are skipped.
+- **Open-ended = 46,375**, against a ceiling of `11,788 × 4 = 47,152` (common name, *kind-of*, scientific name, genus). The **777-item** shortfall is the union of those 597 single-word names — which also suppress the *kind-of* item — and images whose `taxon` resolves to `Unknown` or to a single word.
+Both trace to `taxon_name_mapping.json` coverage and class-name morphology; audit them with the snippet in §5.
  
 ---
  
@@ -582,10 +482,9 @@ An `Unknown` count above zero means the naming axis is silently under-sampled fo
 | 7 | `body part of this bird marked with` | Anatomical Localization |
 | — | *fallthrough* | Morphological Attributes |
  
-Two structural remarks. First, rule 3 **must** precede rule 4, since salience stems contain the word *visible*; the ordering is load-bearing. Second, the fallthrough absorbs residual attribute groups (`has_head_pattern`, `has_primary_color`, …) whose surface forms escape rules 5–6 — correct by construction, but it means the Morphological bucket is defined *residually* rather than positively. Any future question family added to `make_qa()` will silently land there unless a rule is added for it.
+Rule 3 **must** precede rule 4, since salience stems contain the word *visible*; the ordering is load-bearing. The fallthrough absorbs residual attribute groups (`has_head_pattern`, `has_primary_color`, …) whose surface forms escape rules 5–6, so the Morphological bucket is defined *residually* rather than positively — any new question family added to `make_qa()` lands there unless a rule is added for it.
  
 ---
-
  
 ## 12. Output Schemas
  
@@ -593,21 +492,24 @@ Two structural remarks. First, rule 3 **must** precede rule 4, since salience st
  
 See §7.
  
-### `QA.csv` — one row per question
+### `QA.csv` — one row per question (824,104)
  
 | Column | Type | Description |
 | --- | --- | --- |
 | `image_id` | int **or** str | CUB integer index, or a 5-hex UUID for annotated images |
 | `filename` | str | `images/{class}/{file}.jpg` or `Images_Annotated/{file}.jpg`, relative to `BASE_DIR` |
 | `question` | str | Question stem; MCQ items carry an inline `Options: (A) …, (B) …` suffix |
-| `answer` | str | `"(C) dagger"` for MCQ; bare string for open-ended |
+| `answer` | str | `"(C) crown"` for MCQ; bare string for open-ended |
 | `category` | str | One of the four axes in §11 |
  
-### `Images_Annotated/`
+Because integer indices and UUID strings share `image_id`, the column is `object` dtype. Join back to `CUB200_attributes.csv` on the source stem (§9.1), not on `image_id`.
  
-Flat directory of JPEGs, one per source image that had ≥1 visible part. Filenames are `{source_basename}_{uuid5}.jpg`. These are **derived** artifacts and can be regenerated at any time; exclude them from version control.
+### `Images_Annotated/` — 11,788 JPEGs
+ 
+Flat directory, one file per photograph, named `{source_stem}_{uuid5}.jpg`. These are **derived** artifacts; exclude them from version control and regenerate as needed.
  
 ---
+
 
 
 ## 13. Citation
