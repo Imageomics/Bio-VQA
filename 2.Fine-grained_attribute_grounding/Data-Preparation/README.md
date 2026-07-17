@@ -423,6 +423,7 @@ Binary (Yes/No) Answers         : 0 (0.0%)
 ```
  
 </details>
+
 ### 10.1 Headline figures
  
 | Quantity | Value |
