@@ -363,7 +363,8 @@ The figures below are the verbatim output of Stage 3 on the reference build, and
  
 <details>
 <summary><b><code>data-stats.txt</code> — click to expand the raw report</b></summary>
-```text
+
+ ``` text
 =====================================================================
              CUB-200 FINE-GRAINED VQA DATASET STATISTICS
 =====================================================================
