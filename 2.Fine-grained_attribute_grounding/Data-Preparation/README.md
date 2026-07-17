@@ -47,10 +47,10 @@ This component of **BioVQA** converts the *Caltech-UCSD Birds-200-2011* (CUB-200
 | --- | --- |
 | **Taxonomy & Naming** | Can the model recover common name, folk category, genus, and binomial nomenclature from pixels alone? |
 | **Morphological Attributes** | Can the model read off discrete traits — bill shape, plumage colour, wing pattern, tail length? |
-| **Relative Salience** | Among several traits of the taxon, can the model identify which is *most prominently visible in this image*? |
+| **Relative Salience** | Among several traits true of the taxon, can the model identify which is *most prominently visible in this image*? |
 | **Anatomical Localization** | Can the model report part **visibility**, and resolve a **visual prompt** — a coloured marker overlaid on the image — to the anatomical part beneath it? |
  
-The reference build yields **824,104 questions over 23,576 images** (11,788 CUB source images plus 11,788 marker-annotated derivatives); see §10 for the full composition.
+The reference build yields **824,104 questions over 11,788 photographs** (each contributing one source image and one marker-annotated derivative, for 23,576 image files on disk); see §10 for the full composition.
  
 The pipeline is deliberately **three-staged and file-mediated**: each stage writes a durable, inspectable artifact to disk, so any stage may be re-run, audited, or replaced without recomputing the others.
  
@@ -346,25 +346,86 @@ python dataset_stats.py --csv_path "$BASE_DIR/QA.csv"
  
 The report comprises four blocks:
  
-1. **High-level metrics** — total QA pairs, unique images, mean/max/min questions per image.
-2. **Species metrics** — species recovered by splitting `filename` on `/` and taking the second component (`images/001.Black_footed_Albatross/x.jpg → 001.Black_footed_Albatross`); images per species, questions per species.
-3. **Structural analysis** — MCQ vs. open-ended (detected by the literal `"Options:"` marker) and the binary Yes/No share.
-4. **Per-category breakdown** — count, share, unique questions, unique answers, and MCQ/open-ended split for each of the four axes.
-> **Caveat on the species block.** Rows from `Images_Annotated/` have paths of the form `Images_Annotated/Black_Footed_Albatross_0046_18_a3f21.jpg` — a **flat** directory with no species component. `x.split('/')[1]` therefore returns the bare filename, and every annotated image is counted as its own "species". Treat block [2] as valid for the unmodified-image subset only, or filter first:
+1. **High-level metrics** — total QA pairs; distinct *photographs*; source vs. annotated file counts; mean/max/min questions per image.
+2. **Species metrics** — unique species, photographs per species, questions per species (min/max/mean).
+3. **Structural analysis** — MCQ vs. open-ended (detected by the literal `"Options:"` marker), binary Yes/No share, visually-prompted share, and **answer-key letter balance**.
+4. **Per-category breakdown** — count, share, unique stems, unique answers, MCQ/open-ended split, and photograph coverage per axis.
+### 9.1 The species-resolution fix
+ 
+> ⚠️ **The original Stage 3 mis-reported blocks [1] and [2].** It derived species with
 > ```python
-> df = df[~df.filename.str.startswith("Images_Annotated/")]
+> x.split('/')[1]
 > ```
+> which silently assumes a **two-level** path. Only source rows have one:
+>
+> | Row type | `filename` | `split('/')[1]` |
+> | --- | --- | --- |
+> | Source | `images/001.Black_footed_Albatross/Black_Footed_Albatross_0046_18.jpg` | `001.Black_footed_Albatross` ✅ |
+> | Annotated | `Images_Annotated/Black_Footed_Albatross_0046_18_63ac2.jpg` | `Black_Footed_Albatross_0046_18_63ac2.jpg` ❌ |
+>
+> `Images_Annotated/` is **flat**, so index `[1]` lands on the filename — which is unique per image by construction (it embeds a UUID). Every annotated image therefore registered as its own species:
+>
+> ```
+> 11,988 unique "species"  =  200 real species  +  11,788 annotated filenames
+> 23,576 unique "images"   =  11,788 photographs counted twice (raw + marked)
+> ```
+>
+> Both errors propagate: `Average Images per Species` collapsed to 1.97 and `Average Questions per Species` to 68.74, because the denominator was inflated ~60×.
+ 
+**The fix.** Species must be *recovered* for annotated rows rather than parsed. Because Stage 2 names its output `{source_stem}_{uuid5}.jpg`, the source stem is reachable by stripping the suffix and joining back onto the source rows:
+ 
+```python
+UUID_SUFFIX = re.compile(r"_[0-9a-f]{5}$", re.IGNORECASE)
+ 
+is_annot    = df.filename.str.startswith("Images_Annotated/")
+src_species = df.loc[~is_annot, "filename"].str.split("/").str[1]
+src_stems   = df.loc[~is_annot, "filename"].map(stem_of)
+stem_to_species = dict(zip(src_stems, src_species))
+ 
+raw     = df.loc[is_annot, "filename"].map(stem_of)
+strip   = raw.str.replace(UUID_SUFFIX, "", regex=True)
+# fall back to the unstripped stem if the strip overshoots
+annot_stems = strip.where(strip.isin(stem_to_species), raw)
+```
+ 
+This introduces the distinction the original conflated:
+ 
+| Concept | Meaning |
+| --- | --- |
+| **Distinct photographs** | Underlying CUB images — the correct denominator for per-image and per-species rates |
+| **Image files referenced** | Files on disk, i.e. photographs + marker renders |
+ 
+Rows that resolve to neither are labelled `Unresolved`, counted, and surfaced in both the report and stderr — a silent miscount is precisely the failure being fixed, so the corrected script fails loudly instead.
+ 
+### 9.2 Other corrections in the fixed script
+ 
+- **Answer-key letters are stripped before counting uniques.** The original counted `"(A) crown"` and `"(C) crown"` as two distinct answers, inflating `Unique Answers` by the letter permutation. The fix splits `(X) text` and counts `text`.
+- **Answer-key balance is now reported.** A skewed letter distribution is a genuine leakage channel — a model that always answers `(C)` should not clear chance. Verify the distribution is near-uniform before reporting accuracy.
+- **Division-by-zero guards** on empty frames and empty categories.
+- **Schema validation** — missing required columns are reported rather than raising a bare `KeyError`.
+- **`--out_name`** added, so sensitivity runs don't overwrite each other.
+### 9.3 Reported vs. corrected
+ 
+| Metric | Original (wrong) | Corrected |
+| --- | ---: | ---: |
+| Unique species | 11,988 | **200** |
+| Unique images | 23,576 | **11,788** photographs (23,576 files) |
+| Images per species | 1.97 | **58.94** |
+| Questions per species | 68.74 | **4,120.52** |
+| Questions per image | 34.96 | **69.91** per photograph |
+ 
+Totals in blocks [3] and [4] — 824,104 questions, the 94.4/5.6 MCQ split, and the per-axis counts — were **unaffected**, as none of them touch the species path. Only the image and species denominators were wrong.
  
 ---
  
 ## 10. Reference Run — Reported Corpus Composition
  
-The figures below are the verbatim output of Stage 3 on the reference build, and are the numbers reported in the paper. Reproduce them by re-running the pipeline as documented; any deviation indicates a divergent `taxon_name_mapping.json`, an incomplete image tree, or an un-cleared `Images_Annotated/` (see §13).
+The figures below are the verbatim output of Stage 3 on the reference build, and are the numbers reported in the paper. Reproduce them by re-running the pipeline as documented; any deviation indicates a divergent `taxon_name_mapping.json`, an incomplete image tree, or an un-cleared `Images_Annotated/` (see §13). Run the **corrected** Stage 3 from §9.1 — the raw block below predates that fix.
  
 <details>
 <summary><b><code>data-stats.txt</code> — click to expand the raw report</b></summary>
 
- ``` text
+ ```text
 =====================================================================
              CUB-200 FINE-GRAINED VQA DATASET STATISTICS
 =====================================================================
@@ -424,14 +485,16 @@ Binary (Yes/No) Answers         : 0 (0.0%)
  
 </details>
 
+
 ### 10.1 Headline figures
  
 | Quantity | Value |
 | --- | --- |
 | Total QA pairs | **824,104** |
-| Total images referenced | **23,576** (11,788 source + 11,788 marker-annotated) |
+| Distinct photographs | **11,788** |
+| Image files referenced | **23,576** (11,788 source + 11,788 marker-annotated) |
 | Source species | **200** |
-| Mean questions per image | 34.96 |
+| Mean questions per photograph | 69.91 |
 | Question span per image | 1 – 115 |
 | Multiple-choice share | 777,729 (94.4%) |
 | Open-ended share | 46,375 (5.6%) |
@@ -470,27 +533,21 @@ The triadic family hit its ten-item ceiling on **every** image, meaning the `con
  
 **Answer-space width.** Morphological Attributes has 317 unique answers ≈ the 312 CUB attributes minus the excluded `has_size` values; Anatomical Localization has 80 ≈ (15 parts + `None` + `All three`) × letter prefixes. The narrow answer space is why C2 is evaluated with **CAGS** rather than raw accuracy — chance performance is non-trivial and varies per item, and must be normalized out against each item's distractor pool.
  
-**`Min = 1` is the annotated subset.** Marker-localization images carry exactly one question each, which is what drags the mean to 34.96. Conditioning on source images only: `824,104 − 11,788 = 812,316` questions over 11,788 images = **68.91** questions per source image. Both framings are defensible; state which one the paper uses.
+**`Min = 1` is the annotated subset.** Marker-localization files carry exactly one question each, which is what dragged the pre-fix mean down to 34.96 — that figure divided by *files*, not photographs. Three denominators are available, and the paper must say which it uses:
  
-### 10.4 Corrections to apply before citing block [2]
+| Denominator | Value | Questions each |
+| --- | ---: | ---: |
+| Image files on disk | 23,576 | 34.96 |
+| Distinct photographs (all items) | 11,788 | **69.91** |
+| Distinct photographs (source items only) | 11,788 | 68.91 |
  
-Block [2] of the raw report is **not trustworthy as printed**, for the reason documented in §9:
+The middle row is the defensible headline: it counts every question against the photograph it depicts, without double-counting a photograph because it was rendered twice.
  
-| Reported | Actual | Cause |
-| --- | --- | --- |
-| Unique species: 11,988 | **200** | `11,988 = 200 + 11,788`. `Images_Annotated/` is flat, so `filename.split('/')[1]` returns the bare JPEG name and each annotated image is counted as its own species. |
-| Images per species: 1.97 | **58.94** | Follows from the inflated denominator (`11,788 / 200`). |
-| Questions per species: 68.74 | **4,120.52** | Likewise (`824,104 / 200`). |
+### 10.4 Blocks [1] and [2] above are superseded
  
-Filter before reporting:
+**Do not cite blocks [1] or [2] of the raw report.** They were produced by the pre-fix Stage 3 and carry the species-resolution bug dissected in §9.1: `11,988 = 200 + 11,788` and `23,576 = 2 × 11,788`. Re-run the corrected `dataset_stats.py` and cite that output instead — the numbers in §10.1 and §10.3 already reflect the correction.
  
-```python
-src = df[~df.filename.str.startswith("Images_Annotated/")]
-species = src.filename.str.split('/').str[1]
-print(species.nunique())                                   # 200
-print(src.filename.nunique() / species.nunique())          # 58.94
-print(len(df) / 200)                                       # 4120.52
-```
+Blocks [3] and [4] are unaffected and may be cited as printed.
  
 ### 10.5 The Taxonomy & Naming shortfall
  
@@ -528,6 +585,7 @@ An `Unknown` count above zero means the naming axis is silently under-sampled fo
 Two structural remarks. First, rule 3 **must** precede rule 4, since salience stems contain the word *visible*; the ordering is load-bearing. Second, the fallthrough absorbs residual attribute groups (`has_head_pattern`, `has_primary_color`, …) whose surface forms escape rules 5–6 — correct by construction, but it means the Morphological bucket is defined *residually* rather than positively. Any future question family added to `make_qa()` will silently land there unless a rule is added for it.
  
 ---
+
  
 ## 12. Output Schemas
  
