@@ -47,7 +47,7 @@ This component of **BioVQA** converts the *Caltech-UCSD Birds-200-2011* (CUB-200
 | --- | --- |
 | **Taxonomy & Naming** | Can the model recover common name, folk category, genus, and binomial nomenclature from pixels alone? |
 | **Morphological Attributes** | Can the model read off discrete traits — bill shape, plumage colour, wing pattern, tail length? |
-| **Relative Salience** | Among several traits true of the taxon, can the model identify which is *most prominently visible in this image*? |
+| **Relative Salience** | Among several traits of the taxon, can the model identify which is *most prominently visible in this image*? |
 | **Anatomical Localization** | Can the model report part **visibility**, and resolve a **visual prompt** — a coloured marker overlaid on the image — to the anatomical part beneath it? |
  
 The reference build yields **824,104 questions over 23,576 images** (11,788 CUB source images plus 11,788 marker-annotated derivatives); see §10 for the full composition.
