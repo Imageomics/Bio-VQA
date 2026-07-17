@@ -11,10 +11,6 @@
 </p>
 
 
-# BioVQA — Fine-Grained Visual Attribute Grounding
-
-**A CUB-200-2011–derived question–answer corpus for evaluating fine-grained perceptual and grounding ability in vision–language models.**
-
 ---
 
 ## Table of Contents
@@ -30,7 +26,7 @@
 9. [Stage 3 — Corpus Statistics](#9-stage-3--corpus-statistics)
 10. [Question Taxonomy](#10-question-taxonomy)
 11. [Output Schemas](#11-output-schemas)
-12. [Citation](#11-citation)
+12. [Citation](#12-citation)
 
 ---
 
