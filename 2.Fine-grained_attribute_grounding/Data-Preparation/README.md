@@ -30,11 +30,11 @@
 7. [Stage 1 — Building the Consolidated Attribute Table](#7-stage-1--building-the-consolidated-attribute-table)
 8. [Stage 2 — Question Synthesis and Visual Grounding](#8-stage-2--question-synthesis-and-visual-grounding)
 9. [Stage 3 — Corpus Statistics](#9-stage-3--corpus-statistics)
-10. [Question Taxonomy](#10-question-taxonomy)
-11. [Output Schemas](#11-output-schemas)
-12. [Reference Run — Reported Corpus Composition](#12-reference-run--reported-corpus-composition)
-13. [Question Taxonomy](#13-question-taxonomy)
-14. [Citation](#14-citation)
+10. [Reference Run — Reported Corpus Composition](#10-reference-run--reported-corpus-composition)
+11. [Question Taxonomy](#11-question-taxonomy)
+12. [Output Schemas](#12-output-schemas)
+13. [Citation](#13-citation)
+
 
 
 ---
@@ -550,7 +550,7 @@ Flat directory of JPEGs, one per source image that had ≥1 visible part. Filena
 ---
 
 
-## 12. Citation
+## 13. Citation
 
 If you use this component, please cite both the underlying dataset and BioVQA:
 
