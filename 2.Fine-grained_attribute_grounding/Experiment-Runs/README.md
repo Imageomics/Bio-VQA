@@ -36,8 +36,8 @@
 
 ## 1. Overview
 
-This component runs each candidate **vision–language model (VLM)** over the Bio-VQA C2 question
-corpus (`QA.csv`, produced by the CUB-200-2011 generation pipeline) and records its answers. Every
+This component runs each candidate **vision–language model (VLM)** over the question
+corpus (`QA.csv`, produced by the `CUB-200-2011` generation pipeline) and records its answers. Every
 runner does the same three things: load one model family, stream the question CSV through it in
 deterministic batches, and append a single new column of raw answers.
 
@@ -69,8 +69,8 @@ hidden config.
 **Raw output is preserved verbatim.** The runner writes the model's exact string to
 `<tag>_answer` and modifies nothing else in the CSV. Downstream graded evaluation needs to
 distinguish a near-miss (`Phoebastria immutabilis` for `Phoebastria nigripes`) from a coarse answer
-(`albatross`) from a confidently wrong one (`PACHYPTILA`) — so nothing is silently normalized at
-inference time. All cleaning is additive, auditable, and lives in separate columns.
+(`albatross`) from a confidently wrong one (`PACHYPTILA`) — so nothing is normalized at
+inference time.
 
 **Sharding is a deterministic contiguous split.** `--num_chunks N --chunk_id k` slices the dataframe
 into `N` equal contiguous blocks and processes block `k`. The concatenation of all shards is
@@ -96,8 +96,8 @@ reproduces it exactly.
 | `run_gemma.py` | Gemma 3 / Gemma 4 (12B) | `Gemma3ForConditionalGeneration` |
 | `run_llava_next.py` | LLaVA-NeXT (Mistral-7B / Vicuna-7B) | `LlavaNextForConditionalGeneration` |
 | `run_pixtral12B.py` | Pixtral-12B | `LlavaForConditionalGeneration` |
-| `run_Molmo2_8B.py` | Molmo2-8B | `AutoModelForImageTextToText` (`trust_remote_code`) |
-| `run_phi_3_5_vision.py` | Phi-3.5-vision | `AutoModelForCausalLM` (`trust_remote_code`) |
+| `run_Molmo2_8B.py` | Molmo2-8B | `AutoModelForImageTextToText` |
+| `run_phi_3_5_vision.py` | Phi-3.5-vision | `AutoModelForCausalLM` |
 | `run_llama3_2_11B.py` | Llama-3.2-11B-Vision-Instruct | `MllamaForConditionalGeneration` |
 | `run_llama3_2_fix_answers.py` | *(post-processor)* | Canonicalizes free-form Llama output — Section 10 |
 
@@ -187,7 +187,7 @@ Every runner accepts the same core arguments:
 | --- | --- | --- |
 | `--dataset_dir` | *required* | Root directory that `filename` is resolved against |
 | `--csv_path` | *required* | Path to `QA.csv` |
-| `--model_id` | varies | HF checkpoint (required for the multi-checkpoint runners; hard-coded otherwise) |
+| `--model_id` | varies | HF checkpoint |
 | `--batch_size` | 4–8 | Questions per generation call |
 | `--chunk_id` | 0 | Index of this shard |
 | `--num_chunks` | 1 | Total shards (rows split contiguously and evenly) |
@@ -260,16 +260,9 @@ raise.
 Temp frames are namespaced by `chunk_id` and cleaned up per batch, so parallel shards never collide.
 
 **Skip-with-logging.** Missing images are logged and skipped rather than aborting the shard.
-`run_llama3_2_11B.py` additionally wraps `from_pretrained` in a 3-attempt retry with a 30 s backoff,
-absorbing transient contention when many array tasks touch the weight cache at once.
 
 **Live progress logs.** Every 10th question prints file, query, answer, and ground truth, plus a
 running count of unique images seen — enough to catch a broken prompt within seconds of launch.
-
-**Phi-3.5 cache shims.** `run_phi_3_5_vision.py` re-attaches legacy `DynamicCache` methods
-(`seen_tokens`, `get_max_length`, `get_usable_length`) that newer `transformers` removed but
-Phi-3.5's remote code still calls — letting it run in the same environment as the other models
-instead of a pinned one.
 
 ---
 
