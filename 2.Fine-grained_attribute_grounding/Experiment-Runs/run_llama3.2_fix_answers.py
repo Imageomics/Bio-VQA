@@ -1,19 +1,4 @@
-#!/usr/bin/env python3
-"""
-clean_answers.py — canonicalize VLM answers for BioVQA C2 (CUB-200).
-
-Two paths only:
-  MCQ  (question has "Options:")  -> take the letter, rebuild the full option text
-  else (Taxonomy & Naming free)   -> match against the labels seen for that same
-                                     question, else keep the de-markdowned text
-
-Vocab = union of GT answers per question text (closed CUB label set). It never
-looks at the row's own GT, so wrong answers stay wrong and stay readable.
-
-    python clean_answers.py --csv QA_difficulty_llama3.2_11B.csv [--inplace]
-"""
-
-import argparse, os, re, sys
+import argparse, re, sys
 from collections import defaultdict
 import pandas as pd
 
@@ -54,7 +39,6 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--csv", required=True)
     p.add_argument("--pred_col", default=None)
-    p.add_argument("--inplace", action="store_true")
     a = p.parse_args()
 
     df = pd.read_csv(a.csv)
@@ -92,25 +76,28 @@ def main():
             out.append(hit or txt)
             method.append("vocab" if hit else "unmatched")
 
-    tag = re.sub(r"_answer$", "", pred_col, flags=re.I)
-    df[f"{tag}_clean"] = out
-    df[f"{tag}_method"] = method
 
     gt = df["answer"].astype(str).str.strip()
+    clean_series = pd.Series(out, index=df.index)
+    method_series = pd.Series(method, index=df.index)
+
     print(f"rows            : {len(df)}")
     print(f"EM raw          : {(df[pred_col].astype(str).str.strip() == gt).mean():.2%}")
-    print(f"EM clean        : {(df[f'{tag}_clean'].astype(str).str.strip() == gt).mean():.2%}")
-    print(df[f"{tag}_method"].value_counts().to_string())
+    print(f"EM clean        : {(clean_series.astype(str).str.strip() == gt).mean():.2%}")
+    print(method_series.value_counts().to_string())
 
-    bad = df[df[f"{tag}_method"].isin(["no_letter", "unmatched"])]
-    if len(bad):
-        print(f"\nneeds a look (n={len(bad)}):")
-        for _, r in bad.head(10).iterrows():
+    bad_mask = method_series.isin(["no_letter", "unmatched"])
+
+    if bad_mask.any():
+    
+        print(f"\nneeds a look (n={int(bad_mask.sum())}):")
+        for _, r in df[bad_mask].head(10).iterrows():
             print(f"  gt={r['answer']!r:<32} pred={str(r[pred_col])[:60]!r}")
 
-    dst = a.csv if a.inplace else os.path.splitext(a.csv)[0] + "_clean.csv"
-    df.to_csv(dst, index=False)
-    print("\nsaved:", dst)
+
+    df[pred_col] = clean_series
+    df.to_csv(a.csv, index=False)
+    print(f"\nupdated column {pred_col!r} in place, saved: {a.csv}")
 
 
 if __name__ == "__main__":
