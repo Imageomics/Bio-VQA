@@ -63,6 +63,47 @@ QA_<model>.csv                                        (raw predictions, one <tag
  setup_manual_review_*  ──►  Results/Manual Review/             (blind human validation of CAGS)
 ```
 
+
+```
+                   ┌──────────────────────────────────────────────────────────────────────────────┐
+                   │   QA_<model>.csv        raw predictions, one <tag>_answer column per model   │
+                   └──────────────────────────────────────────────────────────────────────────────┘
+                                                        │
+                              ┌─────────────────────────┴─────────────────────────┐
+                              ▼                                                   ▼
+                   ┌───────────────────────────────┐               ┌───────────────────────────────┐
+                   │   evaluate_soft.py            │               │   evaluate.py                 │
+                   │   graded / CAGS scoring       │               │   exact-match + diagnostics   │
+                   └───────────────────────────────┘               └───────────────────────────────┘
+                              │                                                   │
+                              ▼                                                   ▼
+                   ┌───────────────────────────────┐               ┌───────────────────────────────┐
+                   │  <model>/Evaluation/          │               │  <model>/Evaluation/          │
+                   │  eval_soft_*  per-item CAGS,  │               │  eval_*  exact match, format  │
+                   │  family / category tables     │               │  & position-bias diagnostics  │
+                   └───────────────────────────────┘               └───────────────────────────────┘
+                              │                                                   │
+                              ▼                                                   ▼
+                   ┌───────────────────────────────┐               ┌───────────────────────────────┐
+                   │  Results/Eval - CAGS/         │               │  Results/Eval - Exact Match/  │
+                   │  leaderboard · by-family ·    │               │  leaderboard · by-family ·    │
+                   │  by-category · stats          │               │  by-category · format         │
+                   └───────────────────────────────┘               └───────────────────────────────┘
+                              │
+                              ▼
+                   ┌───────────────────────────────────────────────────────────────────────────────┐
+                   │   sensitivity_sweep.py   ──►   Results/Eval - CAGS/sweep_*                    │
+                   │   ranking stability vs. the metric's free constants (τ, α, kernel, policy)    │
+                   └───────────────────────────────────────────────────────────────────────────────┘
+                                                          │
+                                                          ▼
+                   ┌───────────────────────────────────────────────────────────────────────────────┐
+                   │   setup_manual_review_*   ──►   Results/Manual Review/                        │
+                   │   blind, stratified human validation of the CAGS metric                       │
+                   └───────────────────────────────────────────────────────────────────────────────┘
+
+```
+
 > **The measurement problem this axis solves.** Fine-grained attribute questions are *near-miss-rich*: "wing is **blue**" vs. "wing is **purple**" is a small perceptual error; "marked part is the **nape**" vs. "**crown**" is a small spatial error; "**song sparrow**" vs. "**fox sparrow**" shares a genus and a head-noun. A metric that scores all of these as a flat **0** discards most of the signal that separates a good model from a bad one, and conflates *being slightly wrong* with *being completely lost*. CAGS is designed to recover exactly that signal.
 
 ---
