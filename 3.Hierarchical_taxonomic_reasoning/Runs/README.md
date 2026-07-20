@@ -1,4 +1,4 @@
-<h1 align="center">VLM Inference &mdash; Hierarchical Taxonomic Reasoning</h1>
+<h1 align="center"> Bio-VQA &rarr; Hierarchical Taxonomic Reasoning &rarr; VLM Inference </h1>
  
 <p align="center">
   <b>Eighteen vision–language models · Ten organismal groups · One prompting protocol</b>
