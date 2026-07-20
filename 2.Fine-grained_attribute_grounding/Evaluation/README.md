@@ -48,21 +48,6 @@ This axis grades 18 candidate **vision–language models (VLMs)** on its **824,1
 
 The axis spans five competencies mapped onto four scoring categories — **nomenclature** (*Taxonomy & Naming*), **morphological attribute recognition** (*Morphological Attributes*), **relative trait salience** (*Relative Salience*), and **anatomical part visibility + visually-prompted localization** (*Anatomical Localization*) — mixing multiple-choice items with open-ended naming. The evaluation reports **two metrics side by side**: a strict **Exact Match (EM)** that anchors the benchmark, and a graded **CAGS (Chance-Adjusted Graded Score)** that awards partial credit for being *close* and then subtracts the credit a confused guesser would have earned by chance. Where the two disagree is where the science lives.
 
-```
-QA_<model>.csv                                        (raw predictions, one <tag>_answer column)
-      │
-      ▼
- evaluate_soft.py   ──►  <model>/Evaluation/eval_soft_*         (per-item CAGS, family/category tables)
- evaluate.py        ──►  <model>/Evaluation/eval_*              (exact match + format diagnostics)
-      │
-      ├─►  Results/Eval - CAGS/          leaderboard · by-family · by-category · stats
-      ├─►  Results/Eval - Exact Match/   leaderboard · by-family · by-category · format
-      │
- sensitivity_sweep.py  ──►  Results/Eval - CAGS/sweep_*         (ranking stability vs. metric constants)
-      │
- setup_manual_review_*  ──►  Results/Manual Review/             (blind human validation of CAGS)
-```
-
 
 ```
                    ┌──────────────────────────────────────────────────────────────────────────────┐
