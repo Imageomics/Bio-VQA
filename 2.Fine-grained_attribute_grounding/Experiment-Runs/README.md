@@ -1,4 +1,4 @@
-<h1 align="center">Bio-VQA &rarr; Fine-Grained Visual Attribute Grounding</h1>
+<h1 align="center">Bio-VQA &rarr; Fine-Grained Visual Attribute Grounding &rarr; Experiments </h1>
 
 <p align="center">
   <b>CUB-200-2011 &mdash; Vision&ndash;Language Model Inference Runners</b>
