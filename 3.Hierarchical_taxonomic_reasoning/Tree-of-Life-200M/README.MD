@@ -1,4 +1,4 @@
-<h1 align="center"> Bio-VQA &rarr; Hierarchical_taxonomic_reasoning &rarr; Tree-of-Life-200M </h1>
+<h1 align="center"> Bio-VQA &rarr; Hierarchical taxonomic reasoning &rarr; Tree-of-Life-200M </h1>
 
 <p align="center">
   <b>Hierarchical Taxonomic Reasoning &mdash; Data Acquisition &amp; QA Generation Pipeline</b>
