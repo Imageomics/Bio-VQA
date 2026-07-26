@@ -429,22 +429,22 @@ and `unmatched` counts before trusting the output.
 ## 11. End-to-End Pipeline
 
 ```
-                              QA.csv
-                                │
-        ┌───────────────────────┼───────────────────────────┐
-        │                       │                           │
-   run_qwen.py            run_InternVL.py      …     run_llama3_2_11B.py
-   (× N shards)            (× N shards)                (× N shards)
-        │                       │                           │
-   concat shards           concat shards               concat shards
-        │                       │                           │
-   QA_qwen…csv            QA_InternVL…csv          QA_llama3.2_11B.csv
-        │                       │                           │
-        │                       │              run_llama3_2_fix_answers.py
-        │                       │                           │
-        └───────────┬───────────┘                  QA_llama3.2_11B_clean.csv
-                    │                                       │
-                    └──────────────► graded evaluation (CAGS) ◄──────────────┘
+                                    QA.csv
+                                      │
+              ┌───────────────────────┼───────────────────────────────────────┐
+              │                       │                                       │
+         run_qwen.py            run_InternVL.py            …           run_llama3_2_11B.py
+         (× N shards)            (× N shards)                            (× N shards)
+              │                       │                                       │
+         concat shards           concat shards                           concat shards
+              │                       │                                       │
+         QA_qwen…csv            QA_InternVL…csv                      QA_llama3.2_11B.csv
+              │                       │                                       │
+              │                       │                          run_llama3_2_fix_answers.py
+              │                       │                                       │
+              └───────────┬───────────┘                              QA_llama3.2_11B_clean.csv
+                          │                                                   │
+                          └───────────► graded evaluation (CAGS) ◄────────────┘
 ```
 
 All models except Llama-3.2 feed the evaluator directly from their raw `<tag>_answer` column;
