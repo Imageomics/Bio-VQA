@@ -1,4 +1,4 @@
-<h1 align="center"> Hierarchical Taxonomic Reasoning &rarr; TOL-200M &rarr; Common-Name Resolution </h1>
+<h2 align="center"> Hierarchical Taxonomic Reasoning &rarr; TOL-200M &rarr; Common-Name Resolution </h2>
 
 <p align="center">
   <b>Detecting, Quantifying &amp; Repairing Multilingual Vernacular-Name Contamination in the Common-Name Question Set</b>
