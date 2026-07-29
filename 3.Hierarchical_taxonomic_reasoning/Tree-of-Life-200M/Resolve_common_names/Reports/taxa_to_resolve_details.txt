@@ -1,0 +1,467 @@
+# taxa with no English common name from stage 1: 135
+#   35 with several names, none English
+#   100 with a single non-English name
+
+file	Amphibians-10K.csv                  10000 rows     519 taxa
+file	Angiosperms-10K.csv                 10000 rows     521 taxa
+file	Arachnids-10K.csv                   10000 rows     523 taxa
+file	Birds-10K.csv                       10000 rows     525 taxa
+file	Bryophytes-10K.csv                  10000 rows     525 taxa
+file	Fish-10K.csv                        10000 rows     128 taxa
+file	Gymnosperms-10K.csv                 10000 rows     123 taxa
+file	Insects-10K.csv                     10000 rows     521 taxa
+file	Mammals-10K.csv                     10000 rows     523 taxa
+file	Reptiles-10K.csv                    10000 rows     525 taxa
+
+==================================================================
+file	Arachnids-10K.csv
+==================================================================
+
+Acalitus longisetosus   [1 name]
+    gökblod                                        20 rows   no / non_ascii
+
+Acantholycosa lignaria   [1 name]
+    stockvargspindel                               20 rows   no / gbif
+
+Aculepeira ceropegia   [1 name]
+    eklövsspindel                                  20 rows   no / non_ascii
+
+Aelurillus v-insignitus   [1 name]
+    vinkelhoppspindel                              20 rows   no / gbif
+
+Agalenatea redii   [2 names]
+    sammetshjulspindel                             15 rows   no / gbif
+    Lodden hjulspinder                              5 rows   no / gbif
+
+Agroeca brunnea   [1 name]
+    skogslyktspindel                               20 rows   no / gbif
+
+Alopecosa barbipes   [1 name]
+    hedvargspindel                                 20 rows   no / gbif
+
+Alopecosa cuneata   [1 name]
+    tjockbent vargspindel                          20 rows   no / gbif
+
+Alopecosa inquilina   [1 name]
+    parfläckig vargspindel                         20 rows   no / non_ascii
+
+Alopecosa pulverulenta   [1 name]
+    ängsvargspindel                                20 rows   no / non_ascii
+
+Amaurobius fenestralis   [1 name]
+    fönsterspindel                                 20 rows   no / non_ascii
+
+Anelosimus vittatus   [1 name]
+    bandklotspindel                                20 rows   no / gbif
+
+Araneus alsine   [1 name]
+    apelsinspindel                                 20 rows   no / gbif
+
+Araneus angulatus   [1 name]
+    knölspindel                                    20 rows   no / non_ascii
+
+Araneus quadratus   [2 names]
+    kvadratspindel                                 17 rows   no / gbif
+    Kvadratedderkop                                 3 rows   no / gbif
+
+Araneus sturmi   [1 name]
+    ruterspindel                                   20 rows   no / gbif
+
+Araniella cucurbitina   [1 name]
+    lövgurkspindel                                 20 rows   no / non_ascii
+
+Araniella opisthographa   [1 name]
+    ekgurkspindel                                  20 rows   no / gbif
+
+Arctosa cinerea   [2 names]
+    sandvargspindel                                18 rows   no / gbif
+    Sandgraveedderkop                               2 rows   no / gbif
+
+Arctosa perita   [2 names]
+    dynvargspindel                                 14 rows   no / gbif
+    Klitgraveedderkop                               6 rows   no / gbif
+
+Attulus saltator   [1 name]
+    guttaperkaspindel                              19 rows   no / gbif
+
+Attulus terebratus   [1 name]
+    laduhoppspindel                                20 rows   no / gbif
+
+Callilepis nocturna   [1 name]
+    guldspindel                                    20 rows   no / gbif
+
+Cheiracanthium punctorium   [1 name]
+    större sporrspindel                            10 rows   no / non_ascii
+
+Clubiona comta   [1 name]
+    broksäckspindel                                20 rows   no / non_ascii
+
+Clubiona phragmitis   [2 names]
+    vassäckspindel                                 19 rows   no / non_ascii
+    Tagrørssækspinder                               1 rows   no / non_ascii
+
+Clubiona subsultans   [1 name]
+    barrsäckspindel                                19 rows   no / non_ascii
+
+Coriarachne depressa   [1 name]
+    barkkrabbspindel                               20 rows   no / gbif
+
+Dendryphantes rudis   [1 name]
+    barrhoppspindel                                20 rows   no / gbif
+
+Diaea dorsata   [2 names]
+    bladkrabbspindel                               17 rows   no / gbif
+    Grøn krabbeedderkop                             3 rows   no / non_ascii
+
+Dicranopalpus ramosus   [2 names]
+    grenlocke                                      15 rows   no / gbif
+    Gaffelmejer                                     5 rows   no / gbif
+
+Dictyna arundinacea   [1 name]
+    ljungkardarspindel                             16 rows   no / gbif
+
+Drapetisca socialis   [2 names]
+    barkmattvävare                                 18 rows   no / non_ascii
+    Barkjæger                                       2 rows   no / non_ascii
+
+Episinus angulatus   [2 names]
+    skogsbalalajkaspindel                          18 rows   no / gbif
+    Balalajkaedderkop                               2 rows   no / gbif
+
+Eriophyes inangulis   [1 name]
+    altofsar                                       20 rows   no / gbif
+
+Eriophyes prunispinosae   [1 name]
+    slånknottror                                    1 rows   no / non_ascii
+
+Ero furcata   [1 name]
+    skogskaparspindel                              20 rows   no / gbif
+
+Euophrys frontalis   [1 name]
+    signalhoppspindel                              20 rows   no / gbif
+
+Evarcha arcuata   [1 name]
+    bandithoppspindel                              20 rows   no / gbif
+
+Evarcha falcata   [1 name]
+    brokhoppspindel                                20 rows   no / gbif
+
+Gibbaranea gibbosa   [1 name]
+    lövpuckelspindel                               20 rows   no / non_ascii
+
+Gibbaranea omoeda   [1 name]
+    barrpuckelspindel                              20 rows   no / gbif
+
+Gnaphosa montana   [1 name]
+    skogshuggspindel                               20 rows   no / gbif
+
+Gongylidium rufipes   [1 name]
+    morotsdvärgspindel                              8 rows   no / non_ascii
+
+Heliophanus cupreus   [1 name]
+    kopparhoppspindel                              20 rows   no / gbif
+
+Heliophanus dubius   [1 name]
+    smaragdhoppspindel                             20 rows   no / gbif
+
+Heliophanus flavipes   [1 name]
+    bronshoppspindel                               20 rows   no / gbif
+
+Hypomma bituberculatum   [1 name]
+    vasskullspindel                                 1 rows   no / gbif
+
+Hypsosinga pygmaea   [1 name]
+    strimglansspindel                              18 rows   no / gbif
+
+Labulla thoracica   [1 name]
+    rotmattvävare                                  14 rows   no / non_ascii
+
+Leiobunum gracile   [1 name]
+    broklocke                                      20 rows   no / gbif
+
+Leiobunum rotundum   [2 names]
+    rödlocke                                       19 rows   no / non_ascii
+    Rød langbensmejer                               1 rows   no / non_ascii
+
+Lepthyphantes minutus   [1 name]
+    trädmattvävare                                 20 rows   no / non_ascii
+
+Leviellus stroemi   [1 name]
+    tallsektorspindel                              20 rows   no / gbif
+
+Linyphia hortensis   [2 names]
+    lundbaldakinspindel                            16 rows   no / gbif
+    Skovbaldakinspinder                             4 rows   no / gbif
+
+Macrargus rufus   [1 name]
+    skogstäckvävare                                20 rows   no / non_ascii
+
+Mangora acalypha   [2 names]
+    ljusterspindel                                 19 rows   no / gbif
+    Sortstribet hedehjulspinder                     1 rows   no / gbif
+
+Marpissa muscosa   [2 names]
+    murhoppspindel                                 18 rows   no / gbif
+    Stor springedderkop                             2 rows   no / gbif
+
+Metellina mengei   [1 name]
+    munkspindel                                    20 rows   no / gbif
+
+Metellina merianae   [1 name]
+    bryggspindel                                   20 rows   no / gbif
+
+Metellina segmentata   [1 name]
+    höstspindel                                    20 rows   no / non_ascii
+
+Microlinyphia pusilla   [1 name]
+    glansbaldakinspindel                           20 rows   no / gbif
+
+Nemastoma lugubre   [2 names]
+    östlig fläcklocke                              18 rows   no / non_ascii
+    Østlig dødningehovedmejer                       2 rows   no / non_ascii
+
+Neoscona adianta   [1 name]
+    brokig hjulspindel                              4 rows   no / gbif
+
+Neottiura bimaculata   [2 names]
+    vitbandad klotspindel                          17 rows   no / gbif
+    Æggebæreren                                     3 rows   no / non_ascii
+
+Neriene clathrata   [1 name]
+    tuvbaldakinspindel                             20 rows   no / gbif
+
+Neriene montana   [1 name]
+    markisspindel                                  20 rows   no / gbif
+
+Neriene peltata   [1 name]
+    kvistbaldakinspindel                           20 rows   no / gbif
+
+Oligolophus hansenii   [1 name]
+    mörk smålocke                                  20 rows   no / non_ascii
+
+Oligolophus tridens   [1 name]
+    ljus smålocke                                  20 rows   no / non_ascii
+
+Opilio canestrinii   [2 names]
+    orange vägglocke                               18 rows   no / non_ascii
+    Orange vægmejer                                 2 rows   no / non_ascii
+
+Oxyopes ramosus   [1 name]
+    praktlospindel                                 20 rows   no / gbif
+
+Ozyptila praticola   [1 name]
+    brokpaddspindel                                20 rows   no / gbif
+
+Pachygnatha clercki   [2 names]
+    ljus käkspindel                                18 rows   no / non_ascii
+    Søtykkæbe                                       2 rows   no / non_ascii
+
+Pachygnatha degeeri   [2 names]
+    mörk käkspindel                                19 rows   no / non_ascii
+    Marktykkæbe                                     1 rows   no / non_ascii
+
+Pachygnatha listeri   [1 name]
+    randig käkspindel                              20 rows   no / non_ascii
+
+Paidiscura pallens   [2 names]
+    dvärgklotspindel                               17 rows   no / non_ascii
+    Lille bladkugleedderkop                         3 rows   no / gbif
+
+Parasteatoda lunata   [2 names]
+    fröspindel                                     18 rows   no / non_ascii
+    Bladhyttespinder                                2 rows   no / gbif
+
+Pardosa amentata   [1 name]
+    prickvargspindel                               20 rows   no / gbif
+
+Pardosa lugubris   [1 name]
+    lövvargspindel                                 20 rows   no / non_ascii
+
+Pardosa paludicola   [1 name]
+    sotvargspindel                                  1 rows   no / gbif
+
+Pardosa prativaga   [1 name]
+    strumpvargspindel                              20 rows   no / gbif
+
+Paroligolophus agrestis   [2 names]
+    glansig smålocke                               18 rows   no / non_ascii
+    Hedemejer                                       2 rows   no / gbif
+
+Pellenes tripunctatus   [1 name]
+    svärdhoppspindel                               20 rows   no / non_ascii
+
+Philodromus aureolus   [1 name]
+    gyllensnabblöpare                              20 rows   no / non_ascii
+
+Philodromus cespitum   [1 name]
+    trädsnabblöpare                                20 rows   no / non_ascii
+
+Philodromus collinus   [1 name]
+    gransnabblöpare                                20 rows   no / non_ascii
+
+Philodromus dispar   [1 name]
+    fracksnabblöpare                               20 rows   no / non_ascii
+
+Philodromus emarginatus   [1 name]
+    vattrad barksnabblöpare                        20 rows   no / non_ascii
+
+Philodromus fuscomarginatus   [1 name]
+    kopparsnabblöpare                              20 rows   no / non_ascii
+
+Phyllocoptes eupadi   [1 name]
+    hägghorn                                       20 rows   no / non_ascii
+
+Phylloneta impressa   [1 name]
+    strutklotspindel                               20 rows   no / gbif
+
+Phylloneta sisyphia   [1 name]
+    tältklotspindel                                20 rows   no / non_ascii
+
+Pityohyphantes phrygianus   [1 name]
+    granbaldakinspindel                            20 rows   no / gbif
+
+Platnickina tincta   [2 names]
+    bläckklotspindel                               19 rows   no / non_ascii
+    Blækkugleedderkop                               1 rows   no / non_ascii
+
+Platybunus pinetorum   [1 name]
+    storögonlocke                                  20 rows   no / non_ascii
+
+Salticus cingulatus   [1 name]
+    stamzebraspindel                               20 rows   no / gbif
+
+Segestria senoculata   [1 name]
+    huggormsspindel                                20 rows   no / gbif
+
+Singa hamata   [1 name]
+    revbensspindel                                 20 rows   no / gbif
+
+Steatoda albomaculata   [1 name]
+    fläckvaxspindel                                 4 rows   no / non_ascii
+
+Stemonyphantes lineatus   [1 name]
+    randmattvävare                                 20 rows   no / non_ascii
+
+Synageles venator   [1 name]
+    smalmyrespindel                                20 rows   no / gbif
+
+Tetragnatha dearmata   [1 name]
+    fläcksträckspindel                             20 rows   no / non_ascii
+
+Tetragnatha extensa   [1 name]
+    mässingssträckspindel                          20 rows   no / non_ascii
+
+Tetragnatha montana   [1 name]
+    gyllensträckspindel                            20 rows   no / non_ascii
+
+Tetragnatha nigrita   [1 name]
+    sotsträckspindel                               18 rows   no / non_ascii
+
+Tetragnatha obtusa   [1 name]
+    pärlsträckspindel                              20 rows   no / non_ascii
+
+Tetragnatha pinicola   [1 name]
+    silversträckspindel                            20 rows   no / non_ascii
+
+Textrix denticulata   [1 name]
+    klipptrattspindel                              20 rows   no / gbif
+
+Thanatus formicinus   [1 name]
+    lansettsnabblöpare                             20 rows   no / non_ascii
+
+Theridion mystaceum   [1 name]
+    barkklotspindel                                20 rows   no / gbif
+
+Theridion varians   [1 name]
+    brynklotspindel                                14 rows   no / gbif
+
+Tibellus oblongus   [1 name]
+    ängshalmspindel                                20 rows   no / non_ascii
+
+Trichonephila clavata   [1 name]
+    Jorō spider                                    20 rows   no / non_ascii
+
+Trochosa terricola   [2 names]
+    skogsbjörnspindel                              18 rows   no / non_ascii
+    Almindelig bjørneedderkop                       2 rows   no / non_ascii
+
+Uloborus plumipes   [1 name]
+    knätofsspindel                                 20 rows   no / non_ascii
+
+Xerolycosa nemoralis   [1 name]
+    hedjaktspindel                                 20 rows   no / gbif
+
+Xysticus audax   [1 name]
+    brynkrabbspindel                               20 rows   no / gbif
+
+Xysticus bifasciatus   [1 name]
+    kungskrabbspindel                              20 rows   no / gbif
+
+Xysticus cristatus   [1 name]
+    fältkrabbspindel                               20 rows   no / non_ascii
+
+Xysticus luctuosus   [1 name]
+    skogskrabbspindel                              20 rows   no / gbif
+
+Xysticus ulmi   [1 name]
+    kärrkrabbspindel                               20 rows   no / non_ascii
+
+Zora spinimana   [2 names]
+    ängstaggfoting                                 19 rows   no / non_ascii
+    Katteedderkop                                   1 rows   no / gbif
+
+Zygiella atrica   [1 name]
+    smalsektorspindel                               9 rows   no / gbif
+
+Zygiella x-notata   [2 names]
+    bredsektorspindel                              11 rows   no / gbif
+    Grå sektoredderkop                              9 rows   no / non_ascii
+
+==================================================================
+file	Bryophytes-10K.csv
+==================================================================
+
+Alleniella complanata   [2 names]
+    platt fjädermossa                              15 rows   no / non_ascii
+    Almindelig fladmos                              5 rows   no / gbif
+
+Bartramia pomiformis   [2 names]
+    äppelmossa                                     17 rows   no / non_ascii
+    Gulgrøn kuglekapsel                             3 rows   no / non_ascii
+
+Bucklandiella heterosticha   [2 names]
+    bergraggmossa                                  17 rows   no / gbif
+    Sten-børstemos                                  3 rows   no / non_ascii
+
+Dicranum majus   [2 names]
+    Stor kløvtand                                   8 rows   no / non_ascii
+    stor kvastmossa                                 3 rows   no / gbif
+
+Eurhynchium angustirete   [2 names]
+    hasselmossa                                    14 rows   no / gbif
+    Stor næbmos                                     6 rows   no / non_ascii
+
+Niphotrichum elongatum   [2 names]
+    spärraggmossa                                  15 rows   no / non_ascii
+    Lang børstemos                                  5 rows   no / non_ascii
+
+Orthodicranum flagellare   [2 names]
+    flagellkvastmossa                              19 rows   no / gbif
+    Mangegrenet tyndvinge                           1 rows   no / gbif
+
+Orthodicranum montanum   [2 names]
+    Tæt tyndvinge                                  10 rows   no / non_ascii
+    stubbkvastmossa                                10 rows   no / gbif
+
+Orthotrichum anomalum   [2 names]
+    Mørk furehætte                                 11 rows   no / non_ascii
+    rödskaftad hättemossa                           9 rows   no / non_ascii
+
+==================================================================
+file	Reptiles-10K.csv
+==================================================================
+
+Zootoca vivipara   [2 names]
+    skogsödla                                      18 rows   no / non_ascii
+    Skovfirben                                      2 rows   no / gbif
+
