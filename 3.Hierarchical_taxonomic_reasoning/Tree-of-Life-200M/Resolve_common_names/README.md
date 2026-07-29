@@ -140,40 +140,40 @@ Impact](#scope--measured-impact).
 ## Pipeline at a Glance
 
 ```
-                                             ┌──────────────────────────────────────────────────────────┐
-                                             │           STAGE 1  offline triage        (no network)    │
-                              manifests ──▶  │ GBIF backbone language codes + English wordlist          │
-                (scientific_name + common)   │  ├─ resolve_common_name_english_ascii.csv  (resolved)    │
-                                             │  ├─ taxa_to_resolve.txt                    (handoff)     │
-                                             │  └─ taxa_to_resolve_details.txt            (human read)  │
-                                             └───────────────────────┬──────────────────────────────────┘
-                                                                     │
-                                                                     │ unresolved taxa only
-                                                                     │
-                                                                     ▼
-                                             ┌──────────────────────────────────────────────────────────┐
-                                             │                STAGE 2  API resolution                   │
-                              network ────▶  │   iNaturalist → GBIF vernacular → Wikipedia lead         │
-                                             │    ├─ resolve_common_name_inat_wiki.csv                  │
-                                             │    └─ .api_cache.jsonl  (fetch cache)                    │
-                                             └───────────────────────┬──────────────────────────────────┘
-                                                                     │
-                                                                     │ still-unresolved taxa (≈ {N_manual})
-                                                                     │
-                                                                     ▼
-                                             ┌──────────────────────────────────────────────────────────┐
-                                             │               STAGE 3  manual curation                   │
-                              human ──────▶  │   manually-entered, with proper references               │
-                                             │    └─ resolve_common_name_manual.csv                     │
-                                             └───────────────────────┬──────────────────────────────────┘
-                                                                     │
-                                                                     ▼
-                                             ┌──────────────────────────────────────────────────────────┐
-                                             │ FINALIZE  merge of three disjoint tiers                  │
-                                             │  ├─ common_names_resolved.csv    (Finalized for Eval)    │
-                                             │  ├─ excluded_no_english_name.csv (dropped taxa): NONE    │
-                                             │  └─ name_conflicts.csv           (tier disagreements): 0 │
-                                             └──────────────────────────────────────────────────────────┘
+                                   ┌──────────────────────────────────────────────────────────┐
+                                   │           STAGE 1  offline triage        (no network)    │
+                    manifests ──▶  │ GBIF backbone language codes + English wordlist          │
+      (scientific_name + common)   │  ├─ resolve_common_name_english_ascii.csv  (resolved)    │
+                                   │  ├─ taxa_to_resolve.txt                    (handoff)     │
+                                   │  └─ taxa_to_resolve_details.txt            (human read)  │
+                                   └───────────────────────┬──────────────────────────────────┘
+                                                           │
+                                                           │ unresolved taxa only
+                                                           │
+                                                           ▼
+                                   ┌──────────────────────────────────────────────────────────┐
+                                   │                STAGE 2  API resolution                   │
+                    network ────▶  │   iNaturalist → GBIF vernacular → Wikipedia lead         │
+                                   │    ├─ resolve_common_name_inat_wiki.csv                  │
+                                   │    └─ .api_cache.jsonl  (fetch cache)                    │
+                                   └───────────────────────┬──────────────────────────────────┘
+                                                           │
+                                                           │ still-unresolved taxa (≈ {N_manual})
+                                                           │
+                                                           ▼
+                                   ┌──────────────────────────────────────────────────────────┐
+                                   │               STAGE 3  manual curation                   │
+                    human ──────▶  │   manually-entered, with proper references               │
+                                   │    └─ resolve_common_name_manual.csv                     │
+                                   └───────────────────────┬──────────────────────────────────┘
+                                                           │
+                                                           ▼
+                                   ┌──────────────────────────────────────────────────────────┐
+                                   │ FINALIZE  merge of three disjoint tiers                  │
+                                   │  ├─ common_names_resolved.csv    (Finalized for Eval)    │
+                                   │  ├─ excluded_no_english_name.csv (dropped taxa): NONE    │
+                                   │  └─ name_conflicts.csv           (tier disagreements): 0 │
+                                   └──────────────────────────────────────────────────────────┘
 
 ```
 
