@@ -11,7 +11,7 @@ Reptilia/Chondrichthyes/etc. by hand, every deprecated name (Magnoliophyta,
 Osteichthyes, Filicales, ...) resolves to its currently-accepted name via
 GBIF's own taxonomicStatus / acceptedNameUsageID columns.
 
-Output: synonyms.pkl  ->  {"map": {norm_synonym: norm_accepted}, "accepted": set(norm_accepted)}
+Output: synonyms.pkl -> {"format":2, "map":{norm_synonym: [norm_accepted,...]}, "accepted": set}
 
 Run:
     python build_synonyms.py                    # downloads ~600MB zip, builds lookup
@@ -116,9 +116,15 @@ def build(backbone_zip, out_path):
                     print(f"[build]   {n:,} rows")
         print(f"[build] {n:,} rows total, {len(id2name):,} names with ids")
 
-        syn = {}
+        # Set-valued: a name can be a synonym of MORE THAN ONE accepted taxon.
+        # These are pro-parte synonyms - a historical grade split into pieces,
+        # each recorded as a separate synonym row (e.g. Reptilia -> Squamata,
+        # Testudines, Crocodylia, Rhynchocephalia). A single-valued dict would
+        # keep only the last row seen and silently drop the rest.
+        from collections import defaultdict
+        syn = defaultdict(set)
         accepted = set()
-        n_syn = 0
+        n_rows_syn = 0
         for nm, st, acc in rows:
             if not nm:
                 continue
@@ -126,23 +132,31 @@ def build(backbone_zip, out_path):
             if is_syn and acc:
                 target = id2name.get(acc)
                 if target and target != nm:
-                    syn[nm] = target
-                    n_syn += 1
+                    syn[nm].add(target)
+                    n_rows_syn += 1
             elif st in ("accepted", "valid"):
                 accepted.add(nm)
 
-        print(f"[build] synonym->accepted pairs : {len(syn):,}")
-        print(f"[build] accepted names          : {len(accepted):,}")
+        syn = {k: sorted(v) for k, v in syn.items()}          # plain dict of lists
+        multi = {k: v for k, v in syn.items() if len(v) > 1}
+        print(f"[build] synonym names          : {len(syn):,} "
+              f"({n_rows_syn:,} synonym rows)")
+        print(f"[build] pro-parte (2+ targets) : {len(multi):,}")
+        print(f"[build] accepted names         : {len(accepted):,}")
 
         with open(out_path, "wb") as fh:
-            pickle.dump({"map": syn, "accepted": accepted}, fh)
+            # format=2 signals set-valued map (list per key). Readers built for
+            # the old format=1 (one string per key) must be updated.
+            pickle.dump({"format": 2, "map": syn, "accepted": accepted}, fh)
         print(f"[build] wrote {out_path}")
 
-        # sanity: the names we care about
-        for probe in ["magnoliophyta", "reptilia", "osteichthyes",
-                      "chondrichthyes", "anthophyta", "coniferophyta"]:
+        # sanity: the names we care about, and any pro-parte splits among them
+        for probe in ["reptilia", "sauropsida", "magnoliophyta", "osteichthyes",
+                      "chondrichthyes", "anthophyta", "coniferophyta",
+                      "dinosauria", "pisces"]:
             tgt = syn.get(probe)
-            print(f"   probe  {probe:16s} -> {tgt}")
+            flag = "  <-- PRO PARTE" if tgt and len(tgt) > 1 else ""
+            print(f"   probe  {probe:16s} -> {tgt}{flag}")
 
 
 def main():

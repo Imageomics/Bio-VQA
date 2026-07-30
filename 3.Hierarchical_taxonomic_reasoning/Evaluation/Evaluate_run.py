@@ -112,22 +112,40 @@ def detect(question):
 # with the parent. Accept it at CLASS rank only, and only for its own children.
 # The old hand-written LEGACY_CLASS dict (reptiles/fish only) is gone. Soft-EM
 # now credits ANY deprecated-but-correct name via the GBIF Backbone synonym
-# table built by build_synonyms.py. SYNONYMS maps norm(old_name) -> norm(accepted
-# _name); resolve() sends a name to its accepted form (identity if not a synonym).
-# Empty until --synonyms is passed, in which case soft-EM == hard-EM (no crediting).
+# table built by build_synonyms.py. A name can map to MORE THAN ONE accepted
+# taxon (pro-parte synonyms: Reptilia -> Squamata/Testudines/Crocodylia/...),
+# so SYNONYMS maps norm(name) -> set(norm(accepted)). Empty until --synonyms is
+# passed, in which case soft-EM == hard-EM (no crediting).
 SYNONYMS = {}
 
 
 def load_synonyms(path):
+    """Load synonyms.pkl. Accepts both the set-valued format (format=2, list per
+    key) and the old single-string format; both are normalized to sets."""
     global SYNONYMS
     with open(path, "rb") as fh:
-        SYNONYMS = pickle.load(fh)["map"]
+        d = pickle.load(fh)
+    raw = d["map"]
+    SYNONYMS = {}
+    for k, v in raw.items():
+        if isinstance(v, (list, set, tuple)):
+            SYNONYMS[k] = set(v)
+        else:                                  # legacy single-string value
+            SYNONYMS[k] = {v}
     return SYNONYMS
 
 
-def resolve_syn(n):
-    """norm name -> its GBIF-accepted norm name (identity if not a synonym)."""
-    return SYNONYMS.get(n, n)
+def syn_targets(n):
+    """All GBIF-accepted forms of a norm name (empty set if not a synonym)."""
+    return SYNONYMS.get(n, set())
+
+
+def syn_matches(pred_norm, gt_norm):
+    """True if the prediction is a synonym whose accepted form(s) include the GT.
+    One-directional: pred must resolve ONTO the (accepted) ground truth."""
+    if not pred_norm or pred_norm == gt_norm:
+        return False
+    return gt_norm in SYNONYMS.get(pred_norm, ())
 
 
 _LEAD = re.compile(
@@ -353,14 +371,12 @@ def resolve_pred(idx, text, asked, gt_nodes, gt_str):
                else gt_nodes.get(asked))
 
     # Deprecated-but-correct name at ANY rank, via the GBIF synonym table.
-    # Option 1 (strict, one-directional): the ANSWER must be a synonym whose
-    # GBIF-accepted form is EXACTLY the ground truth (a true old->new, e.g.
-    # Magnoliophyta->Tracheophyta, Reptilia->Squamata). This does NOT credit two
-    # lateral synonyms that merely share a cluster, which is what over-credited
-    # plants under the earlier symmetric rule.
+    # One-directional and set-valued: the ANSWER must be a synonym whose
+    # GBIF-accepted form(s) INCLUDE the ground truth. Handles pro-parte splits
+    # (Reptilia -> {Squamata, Testudines, Crocodylia}) so a lizard answered
+    # "Reptilia" is credited, not just a turtle.
     if asked in ("phylum", "class", "order", "family", "genus") \
-            and gt_node is not None and n != norm(gt_str) \
-            and resolve_syn(n) == norm(gt_str):
+            and gt_node is not None and syn_matches(n, norm(gt_str)):
         return gt_node, "legacy"
 
     if asked in ("phylum", "class", "order", "family", "genus"):
@@ -491,12 +507,11 @@ def evaluate_csv(path, idx, group):
         pn, flag = resolve_pred(idx, pr, r, nodes, gt)
         gn, pnorm = norm(gt), norm(clean(pr))
         h = int(gn != "" and gn == pnorm)
-        # soft credit (Option 1, strict): exact match, a resolve_pred 'legacy'
-        # hit, OR the answer is a synonym whose GBIF-accepted form is EXACTLY the
-        # GT. One-directional on purpose: resolve(answer)==gt, not
-        # resolve(answer)==resolve(gt), so lateral synonym clusters don't count.
-        s = int(h or flag == "legacy"
-                or (pnorm != "" and pnorm != gn and resolve_syn(pnorm) == gn))
+        # soft credit: exact match, a resolve_pred 'legacy' hit, OR the answer is
+        # a synonym whose GBIF-accepted form(s) include the GT (set-valued, so
+        # pro-parte splits like Reptilia->{Squamata,Testudines,...} all count).
+        # One-directional: the answer resolves ONTO the accepted ground truth.
+        s = int(h or flag == "legacy" or syn_matches(pnorm, gn))
 
         lr, hh, w, li = score(idx, gt_node, pn)
         hard.append(h)
@@ -656,6 +671,24 @@ def build_report(cube, label, is_all):
     L.append(sec(2, "EM BY RANK  (per model)", fmt(pr),
         what="",
         paper=""))
+
+    # -- 2b: soft EM by rank, and the hard->soft gap by rank -----------------
+    # A coarse rank (phylum..genus) near 0.000 on hard EM that RECOVERS under
+    # soft = taxonomy revision lag (models used the old name). One that STAYS
+    # near 0.000 under soft = a genuine failure the synonym table cannot rescue.
+    # The gap table makes both visible per rank without manual inspection.
+    prs = pv(cube, "model", "rank", "EM_soft", RANK_ORDER).reindex(order)
+    L.append(sec("2b", "EM_soft BY RANK  (per model)", fmt(prs)))
+
+    prg = pv(cube, "model", "rank", "EM_gap", RANK_ORDER).reindex(order)
+    L.append(sec("2c", "EM_soft - EM_hard GAP BY RANK  (per model)", fmt(prg)))
+
+    # pooled per-rank hard vs soft vs gap, for the anomaly scan
+    rr = roll(cube, ["rank"]).set_index("rank")
+    rr = rr.reindex([r for r in RANK_ORDER if r in rr.index])
+    pooled = rr[["EM", "EM_soft", "EM_gap", "n"]]
+    L.append(sec("2d", "PER-RANK HARD vs SOFT  (pooled over models)",
+                 fmt(pooled)))
 
     # -- 3 ------------------------------------------------------------------
     mr = roll(cube, ["rank"]).set_index("rank")["EM"]
@@ -882,7 +915,7 @@ def main():
         raise SystemExit(f"ERROR: --base_dir does not exist: {base_dir}")
 
     tree_cache = args.tree_cache or os.path.join(base_dir, "tree.pkl")
-    out_dir = args.out_dir or os.path.join(base_dir, "ResultX")
+    out_dir = args.out_dir or os.path.join(base_dir, "Result")
 
     # synonyms default: <base_dir>/synonyms.pkl if it exists, else none.
     # An explicit --synonyms path is always honored (and must exist).

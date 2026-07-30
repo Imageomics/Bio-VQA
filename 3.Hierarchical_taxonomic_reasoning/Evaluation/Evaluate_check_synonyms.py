@@ -104,13 +104,19 @@ def main():
     syn = {}
     if args.synonyms:
         with open(args.synonyms, "rb") as fh:
-            syn = pickle.load(fh)["map"]
-        print(f"[lookup] {len(syn):,} synonym->accepted pairs")
+            raw = pickle.load(fh)["map"]
+        for k, v in raw.items():
+            syn[k] = set(v) if isinstance(v, (list, set, tuple)) else {v}
+        multi = sum(1 for v in syn.values() if len(v) > 1)
+        print(f"[lookup] {len(syn):,} synonym names ({multi:,} pro-parte)")
     else:
         print("[lookup] no --synonyms given; verdict column will be NO_LOOKUP")
 
-    def resolve(n):
-        return syn.get(n, n)
+    def targets(n):
+        return syn.get(n, set())
+
+    def matches(pn, gn):
+        return gn in syn.get(pn, ())
 
     nf = "" if args.name_filter.upper() == "ALL" else args.name_filter
     out_path = args.out or os.path.join(args.base_dir, "Evaluation_soft_audit.csv")
@@ -161,17 +167,20 @@ def main():
     rows = []
     for (ans, gt, cat, grp), c in all_pairs.most_common():
         pn, gn = norm(clean(ans)), norm(gt)
+        tgt = targets(pn)
+        tgt_str = "|".join(sorted(tgt)) if tgt else pn
         if not syn:
             verdict, note = "NO_LOOKUP", "pass --synonyms to verify"
         elif pn == gn:
             verdict, note = "OK_exact_after_clean", "matched after boilerplate strip"
-        elif resolve(pn) == gn:
+        elif matches(pn, gn):
             verdict = "OK_synonym"
-            note = f"GBIF: {pn} -> {gn}"
+            pp = "  (pro-parte)" if len(tgt) > 1 else ""
+            note = f"GBIF: {pn} -> {gn}{pp}"
         else:
             verdict = "CHECK"
-            note = f"does NOT resolve to GT (resolves to {resolve(pn)!r})"
-        rows.append((c, cat, gt, ans, resolve(pn), verdict, note, grp))
+            note = f"does NOT resolve to GT (resolves to {tgt_str!r})"
+        rows.append((c, cat, gt, ans, tgt_str, verdict, note, grp))
 
     with open(out_path, "w", newline="") as fh:
         w = csv.writer(fh)
