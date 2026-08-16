@@ -1,0 +1,195 @@
+====================================================================================
+CAGS HUMAN VALIDATION
+====================================================================================
+
+1. SAMPLE
+------------------------------------------------------------------------------------
+  items in key                 306
+  items with ratings           306
+  annotators                   3 (rater1, rater2, rater3)
+  aggregation weights          equal
+  rated by all annotators      292
+  rated by a subset            14
+  abstained by all             0 (0.0%)
+  models represented           3
+
+2. ANNOTATION COVERAGE
+------------------------------------------------------------------------------------
+  Rate at which at least one annotator abstained.
+
+  by category:
+                                n  abstained   rate
+    category                                       
+    Anatomical Localization   102          2  0.020
+    Morphological Attributes  102          8  0.078
+    Relative Salience         102          4  0.039
+
+  by family:
+                           n  abstained   rate
+    family                                    
+    attr_bare_value      102          8  0.078
+    attr_group_value     102          4  0.039
+    marker_localization   21          0  0.000
+    visibility_partset    40          0  0.000
+    visibility_side       41          2  0.049
+
+3. INTER-ANNOTATOR AGREEMENT
+------------------------------------------------------------------------------------
+  rater1 vs rater2:  n=292  quadratic kappa=0.7579  linear kappa=0.6792  exact agreement=0.7295
+  rater1 vs rater3:  n=306  quadratic kappa=0.8312  linear kappa=0.8058  exact agreement=0.8529
+  rater2 vs rater3:  n=292  quadratic kappa=0.7851  linear kappa=0.7247  exact agreement=0.7774
+  Krippendorff alpha (ordinal)   0.7937  (904 pairable values)
+  mean pairwise quadratic kappa  0.7914
+
+4. ANNOTATOR INDEPENDENCE
+------------------------------------------------------------------------------------
+  Fraction of items on which an annotator's rating differs from that of
+  every other annotator.
+
+  rater1: 0.1027  (30 of 292 items)
+  rater2: 0.1815  (53 of 292 items)
+  rater3: 0.0548  (16 of 292 items)
+
+5. METRIC-HUMAN AGREEMENT
+------------------------------------------------------------------------------------
+  all rated items (n=306)
+    Kendall tau-b, CAGS vs human    0.5883  [ 0.5149,  0.6566]
+    Kendall tau-b, EM vs human      0.7178
+    difference, CAGS minus EM      -0.1295  [-0.1804, -0.0808]
+    Spearman rho, CAGS vs human     0.7328
+    Spearman rho, EM vs human       0.8044
+
+  items rated by all annotators (n=292)
+    Kendall tau-b, CAGS vs human    0.5879  [ 0.5137,  0.6587]
+    Kendall tau-b, EM vs human      0.7245
+    difference, CAGS minus EM      -0.1366  [-0.1870, -0.0872]
+    Spearman rho, CAGS vs human     0.7330
+    Spearman rho, EM vs human       0.8102
+
+6. DISCRIMINATION WITHIN EXACT MATCH = 0
+------------------------------------------------------------------------------------
+  items with exact match = 0     204
+  AUC, credited vs rejected       0.6755  [ 0.5912,  0.7570]   (n+=129, n-=75)
+  AUC, partial vs rejected        0.6823   (n+=122, n-=75)
+
+7. AGREEMENT RELATIVE TO THE INTER-ANNOTATOR CEILING
+------------------------------------------------------------------------------------
+  quadratic kappa, CAGS band vs human label   0.7187  (n=306)
+  mean pairwise inter-annotator kappa         0.7914
+  ratio                                       0.908
+
+8. SENSITIVITY TO ANNOTATOR AGGREGATION
+------------------------------------------------------------------------------------
+  Leave-one-annotator-out: each row rebuilds the label from the remainder.
+
+  dropped  n_annotators  tau_b_cags  auc_em0  kappa_metric_human
+     none             3      0.5883   0.6755              0.7187
+   rater1             2      0.5306   0.6071              0.6464
+   rater2             2      0.6294   0.7063              0.7189
+   rater3             2      0.6039   0.6805              0.6782
+
+  tau-b range   [0.5306, 0.6294]
+  AUC range     [0.6071, 0.7063]
+
+9. CALIBRATION BY SCORE BAND
+------------------------------------------------------------------------------------
+          n  mean_cags  mean_human  sd_human
+  band                                      
+  low   102     0.0357      0.2484    0.3211
+  mid   102     0.4647      0.3595    0.2619
+  high  102     1.0000      0.9861    0.0587
+  mean absolute difference  0.1657
+
+10. EXACT MATCH BY SCORE BAND
+------------------------------------------------------------------------------------
+  exact    0    1
+  band           
+  high     0  102
+  low    102    0
+  mid    102    0
+
+  Exact match is determined by band in this sample: strata were drawn on
+  CAGS, which equals one exactly where the response is an exact match.
+  Overall rank correlations for exact match are therefore not comparable
+  with those for CAGS, since exact match declines to order the majority of
+  item pairs and incurs no penalty for them. Section 6 reports the
+  comparison the design supports.
+
+11. CORPUS-REWEIGHTED AGREEMENT
+------------------------------------------------------------------------------------
+  scored files scanned  3
+  band composition:
+    low   corpus=0.2071  sample=0.3333  weight=0.6212
+    mid   corpus=0.0145  sample=0.3333  weight=0.0434
+    high  corpus=0.7785  sample=0.3333  weight=2.3354
+  weighted Kendall tau-b, CAGS vs human  0.8181
+  largest weight ratio                   54:1
+  The effective sample size under these weights is small; the
+  design-based estimate in section 5 is the primary one.
+
+12. AGREEMENT BY CATEGORY AND QUESTION FAMILY
+------------------------------------------------------------------------------------
+  by category:
+                    category   n  tau_b_cags  tau_b_em  mean_cags  mean_human
+     Anatomical Localization 102      0.5335    0.7334     0.4876      0.4902
+    Morphological Attributes 102      0.6692    0.7124     0.4999      0.5596
+           Relative Salience 102      0.5544    0.7180     0.5130      0.5441
+
+  by family:
+                 family   n  tau_b_cags  tau_b_em  mean_cags  mean_human
+        attr_bare_value 102      0.6692    0.7124     0.4999      0.5596
+       attr_group_value 102      0.5544    0.7180     0.5130      0.5441
+    marker_localization  21      0.4431    0.7785     0.6231      0.2857
+     visibility_partset  40      0.8063    0.7977     0.3611      0.4542
+        visibility_side  41      0.5638    0.6695     0.5415      0.6301
+
+13. LARGEST METRIC-HUMAN DISCREPANCIES
+------------------------------------------------------------------------------------
+  CAGS above the human rating:
+    item_id       model                category              family   cags   h  exact                                                     question           gold_answer                model_answer  difference
+     IT0269 Qwen3VL_32B Anatomical Localization marker_localization 0.5962 0.0      0 What is the body part of this bird marked with the blue p...             (D) belly              (C) right wing      0.5962
+     IT0244 Qwen3VL_30B Anatomical Localization marker_localization 0.5884 0.0      0 What is the body part of this bird marked with the yellow...         (C) left wing              (D) right wing      0.5884
+     IT0073 Qwen3VL_32B Anatomical Localization marker_localization 0.5834 0.0      0 What is the body part of this bird marked with the red st...             (D) crown                  (B) throat      0.5834
+     IT0305 Qwen3VL_32B Anatomical Localization marker_localization 0.5693 0.0      0 What is the body part of this bird marked with the white ...         (A) left wing              (C) right wing      0.5693
+     IT0097 Qwen3VL_32B Anatomical Localization marker_localization 0.5594 0.0      0 What is the body part of this bird marked with the blue d...         (D) left wing              (C) right wing      0.5594
+     IT0067 Qwen3VL_30B       Relative Salience    attr_group_value 0.5329 0.0      0 Which of the following is the most prominently visible ph...  (C) eye color: black (D) under tail color: black      0.5329
+     IT0123 Qwen3VL_30B Anatomical Localization marker_localization 0.5290 0.0      0 What is the body part of this bird marked with the green ...              (B) back               (E) left wing      0.5290
+     IT0040 Qwen3VL_32B       Relative Salience    attr_group_value 0.5062 0.0      0 Which of the following is the most prominently visible ph... (C) back color: brown          (D) eye color: red      0.5062
+
+  CAGS below the human rating:
+    item_id         model                 category             family   cags        h  exact                                                     question               gold_answer          model_answer  difference
+     IT0051   Qwen3VL_30B  Anatomical Localization    visibility_side 0.0000 1.000000      0 Which of the eyes of the bird are visible in this image? ...                  (D) None              (A) Left   -1.000000
+     IT0183   Qwen3VL_30B  Anatomical Localization    visibility_side 0.0000 1.000000      0 Which of the eyes of the bird are visible in this image? ...                  (D) None              (A) Left   -1.000000
+     IT0260   Qwen3VL_30B        Relative Salience   attr_group_value 0.0438 1.000000      0 Which of the following is the most prominently visible ph... (E) tail pattern: striped (A) breast color: red   -0.956200
+     IT0139   Qwen3VL_32B Morphological Attributes    attr_bare_value 0.0989 1.000000      0 What is the back color of this bird? Options: (A) grey, (...                 (B) white              (A) grey   -0.901100
+     IT0076   Qwen3VL_32B Morphological Attributes    attr_bare_value 0.1578 1.000000      0 What is the primary color of this bird? Options: (A) rufo...                  (E) grey            (A) rufous   -0.842200
+     IT0162 InternVL3_38B  Anatomical Localization    visibility_side 0.0000 0.833333      0 Which of the legs of the bird are visible in this image? ...                  (D) None              (C) Both   -0.833333
+     IT0208   Qwen3VL_32B  Anatomical Localization visibility_partset 0.0000 0.833333      0 Which of the following parts of the bird are visible in t...                  (D) None         (B) right eye   -0.833333
+     IT0157 InternVL3_38B Morphological Attributes    attr_bare_value 0.1836 1.000000      0 What is the primary color of this bird? Options: (A) red,...                 (B) black             (E) brown   -0.816400
+
+DEFINITIONS
+
+  Human rating         Three-level ordinal judgement of a model response:
+                       0 incorrect, 1 partially correct, 2 correct. Annotators
+                       could abstain where the reference answer appeared
+                       unsupported by the image; abstentions are treated as
+                       missing rather than as zeros.
+  Aggregate label h    Mean rating across available annotators, rescaled to
+                       [0, 1]. Items rated by no annotator are excluded from the
+                       agreement statistics and retained in the item table.
+  Krippendorff alpha   Chance-corrected inter-annotator reliability under the
+                       ordinal difference function; unpairable units are
+                       excluded from the disagreement terms.
+  Quadratic kappa      Cohen's kappa with squared disagreement weights, so that
+                       a 0-versus-2 disagreement costs more than 1-versus-2.
+  Kendall tau-b        Rank correlation with a tie correction, used as the
+                       primary agreement statistic because the human scale has
+                       three levels and ties are frequent.
+  AUC within EM = 0    Probability that a response the annotators credited
+                       receives a higher CAGS than one they rejected, computed
+                       over responses that exact match scores zero.
+  Ceiling ratio        Metric-human quadratic kappa divided by the mean pairwise
+                       inter-annotator kappa.
+  Unique-dissent rate  Fraction of items on which an annotator's rating differs
+                       from that of every other annotator.
+  Intervals            Nonparametric bootstrap percentile intervals over items.

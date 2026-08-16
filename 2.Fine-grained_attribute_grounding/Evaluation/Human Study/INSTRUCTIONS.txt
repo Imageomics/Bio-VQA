@@ -1,0 +1,17 @@
+HOW TO RATE
+-----------
+For each row you see: a bird photo, a question (with answer options), the
+CORRECT answer, and a MODEL's answer. Judge ONLY how correct the MODEL'S answer
+is, using the image and the correct answer as your reference.
+
+Rating scale (fill your column with 0, 1, or 2):
+  2 = Right          the model's answer is correct / equivalent to the correct answer
+  1 = Partially right the model's answer is not correct but is CLOSE -- e.g. the right
+                     body region but wrong property, an adjacent color, an off-by-one
+                     size, one of two correct parts, a near-miss location
+  0 = Wrong          the model's answer is unrelated / clearly incorrect / far off
+
+Rate independently. Do not confer. If you truly cannot tell from the image,
+leave blank (do not guess).
+
+Open the image at the path in 'image_path'. Judge against what you can see.
