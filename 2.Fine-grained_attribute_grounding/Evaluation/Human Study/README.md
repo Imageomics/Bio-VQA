@@ -17,8 +17,8 @@
 ## Table of Contents
 
 1. [Overview](#1-overview)
-2. [Why the Study Is Necessary](#2-why-the-study-is-necessary)
-3. [The Three Claims](#3-the-three-claims)
+2. [Motivation](#2-motivation)
+3. [Validation Objectives](#3-validation-objectives)
 4. [Workflow](#4-workflow)
 5. [Sampling Design](#5-sampling-design)
 6. [Annotation Protocol](#6-annotation-protocol)
@@ -31,6 +31,7 @@
 13. [Reproduction](#13-reproduction)
 14. [Files and Schemas](#14-files-and-schemas)
 15. [Glossary](#15-glossary)
+16. [References](#16-references)
 
 ---
 
@@ -51,19 +52,19 @@ The study answers that question with 306 model responses rated independently by 
 
 ---
 
-## 2. Why the Study Is Necessary
+## 2. Motivation
 
 Two properties of a graded metric are independent, and only one of them is checkable from the metric's own outputs.
 
 **Internal stability** asks whether the leaderboard survives perturbation of the metric's free constants — the colour-kernel temperature $\tau$, the group/value mixing weight $\alpha$, the linear-versus-exponential kernel shape. `sensitivity_sweep.py` in the parent directory establishes this. It is necessary and it is not sufficient: a kernel can be perfectly stable and still measure something no person recognises. Stability under perturbation is a statement about the metric's own arithmetic.
 
-**External validity** asks whether the ordering the metric imposes on wrong answers matches the ordering a person imposes. Nothing internal to the scoring pipeline can answer this, because the pipeline has no access to a criterion outside itself. The only available criterion is human judgement, elicited independently, from people who cannot see the metric's output.
+**External validity** asks whether the ordering the metric imposes on wrong answers matches the ordering a person imposes. This is the standard by which automatic evaluation metrics are assessed elsewhere: a metric earns its place by correlating with human judgement, not by internal coherence [15, 16, 17]. Nothing internal to the scoring pipeline can answer this, because the pipeline has no access to a criterion outside itself. The only available criterion is human judgement, elicited independently, from people who cannot see the metric's output.
 
 I run this study because the graded axis is the contestable part of the evaluation. Exact match needs no validation — its semantics are definitional. CAGS makes a substantive empirical claim every time it awards 0.59 rather than 0.00 to a wrong answer, and that claim is either supported by human judgement or it is not.
 
 ---
 
-## 3. The Three Claims
+## 3. Validation Objectives
 
 I separate the validation into three claims and test them in order, because collapsing them produces a study that appears to establish more than it does.
 
@@ -112,7 +113,7 @@ The study does not test whether CAGS is the best achievable graded metric, wheth
                 annotator 1    annotator 2    annotator 3     ← independent, no conferring
                      └──────────────┼──────────────┘
                                     ▼
-                          ratings_filled.csv
+                          ratings_filled_r3.csv
                                     │
                                     ▼   (+ annotation_key.csv rejoined here)
                    ┌────────────────────────────────────────────┐
@@ -135,7 +136,7 @@ The key is withheld until Stage 3. Annotators see the photograph, the question, 
 
 ### 5.1 Frame
 
-The frame is the union of per-item scored outputs for the three highest-ranked models on the CAGS leaderboard, restricted to the three evaluation categories whose scoring passes through a similarity kernel:
+The frame is the union of per-item scored outputs, over CUB-200-2011 [13], for the three highest-ranked models on the CAGS leaderboard, restricted to the three evaluation categories whose scoring passes through a similarity kernel:
 
 - **Anatomical Localization** — part visibility and visually-prompted marker localization
 - **Morphological Attributes** — attribute values (colour, pattern, shape, size)
@@ -147,7 +148,7 @@ Contributing models: `Qwen3VL_30B` (105 items), `Qwen3VL_32B` (103), `InternVL3_
 
 ### 5.2 Stratification
 
-I stratify on the interaction of category and CAGS band. Writing $\mathcal{C}$ for the three categories and $\mathcal{B}$ for the three bands, I draw
+I stratify on the interaction of category and CAGS band [14]. Writing $\mathcal{C}$ for the three categories and $\mathcal{B}$ for the three bands, I draw
 
 $$
 n_{cb} = 34 \quad \text{for every } (c,b) \in \mathcal{C}\times\mathcal{B}, \qquad N = 9 \times 34 = 306 .
@@ -167,7 +168,7 @@ $$
 306 \times 0.0145 \approx 4.4
 $$
 
-mid-band items — no power whatever to test the partial-credit region, which is the only part of the metric in question. Stratification buys that power at the cost of making sample statistics estimates for a band-balanced population rather than for the corpus. I address the cost directly with an inverse-probability-weighted estimate in §9.7.
+mid-band items — no power whatever to test the partial-credit region, which is the only part of the metric in question. Stratification buys that power at the cost of making sample statistics estimates for a band-balanced population rather than for the corpus. I address the cost directly with an inverse-probability-weighted estimate in [Section 9.7](#97-calibration-and-corpus-reweighting).
 
 Question families are not stratified on and therefore appear at their natural within-category rates:
 
@@ -195,23 +196,13 @@ Each item is rendered as a single self-contained card: photograph at the top, th
 
 I render cards rather than distribute a spreadsheet of file paths because a spreadsheet permits an annotator to rate a row without opening the corresponding photograph, and several of the judgements in this study — whether a bird's left eye is visible, whether a back is better described as white or grey — are undecidable from the text alone.
 
-```
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│                  [ bird photograph ]                 │
-│                                                      │
-├──────────────────────────────────────────────────────┤
-│  QUESTION                                            │
-│  What is the throat color of this bird?              │
-│  (A) black  (B) green  (C) buff  (D) purple          │
-│  (E) white                                           │
-│                                                      │
-│  CORRECT ANSWER      (E) white                       │
-│  MODEL ANSWER        (C) buff                        │
-│                                                      │
-│  IT0002                                              │
-└──────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="cards/IT0002.png" alt="Annotation card for item IT0002" width="480">
+  <br>
+  <sub>Card for IT0002, the item traced in [Section 10.1](#101-metric-and-annotators-agree-it0002). The annotator sees the photograph,
+  the question with its full option list, the reference answer, and the model's answer —
+  and nothing else.</sub>
+</p>
 
 ### 6.2 The scale
 
@@ -257,41 +248,41 @@ $$
 h_i \;=\; \frac{1}{2}\cdot\frac{\displaystyle\sum_{r\in A_i} w_r\,x_{ir}}{\displaystyle\sum_{r\in A_i} w_r} \;\in\; [0,1]
 $$
 
-Renormalising over $A_i$ rather than over all annotators is what lets partially rated items stay in the analysis without imputation. If every annotator abstains, $A_i=\varnothing$, $h_i$ is undefined, and the item is retained in `validation_items.csv` but excluded from the agreement statistics.
+Renormalising over $A_i$ rather than over all annotators is what lets partially rated items stay in the analysis without imputation. If every annotator abstains, $A_i=\emptyset$, $h_i$ is undefined, and the item is retained in `validation_items.csv` but excluded from the agreement statistics.
 
-I report the primary analysis under **equal weights**, $w_r = 1/|A_i|$ after renormalisation, so that $h$ carries no free parameter and requires no defence. Sensitivity to that choice appears in §9.6.
+I report the primary analysis under **equal weights**, $w_r = 1/|A_i|$ after renormalisation, so that $h$ carries no free parameter and requires no defence. Sensitivity to that choice appears in [Section 9.6](#96-sensitivity-to-aggregation).
 
-Where a discrete human category is required — the ceiling comparison in §9.5 — I use
+Where a discrete human category is required — the ceiling comparison in [Section 9.5](#95-agreement-relative-to-the-ceiling) — I use
 
 $$
-\tilde h_i \;=\; \operatorname{round}(2h_i) \;\in\;\{0,1,2\}.
+\tilde h_i \;=\; \mathrm{round}(2h_i) \;\in\;\{0,1,2\}.
 $$
 
 ### 7.2 Worked instances
 
-| Item | Ratings $(x_{i1},x_{i2},x_{i3})$ | $\sum w_r x_{ir} / \sum w_r$ | $h_i$ | $\tilde h_i$ | CAGS |
+| Item | Ratings $(x_{i1},x_{i2},x_{i3})$ | $\lvert A_i\rvert$ | $\sum w_r x_{ir} / \sum w_r$ | $h_i$ | $\tilde h_i$ |
 |:--|:--|--:|--:|--:|--:|
-| IT0002 | $(1,1,1)$ | $3/3 = 1.000$ | 0.500 | 1 | 0.4434 |
-| IT0244 | $(0,0,0)$ | $0/3 = 0.000$ | 0.000 | 0 | 0.5884 |
-| IT0051 | $(2,2,2)$ | $6/3 = 2.000$ | 1.000 | 2 | 0.0000 |
-| IT0053 | $(1,0,2)$ | $3/3 = 1.000$ | 0.500 | 1 | 0.5954 |
-| IT0007 | $(0,\varnothing,0)$ | $0/2 = 0.000$ | 0.000 | 0 | 0.0000 |
+| IT0002 | $(1,1,1)$ | 3 | $3/3 = 1.000$ | 0.500 | 1 |
+| IT0244 | $(0,0,0)$ | 3 | $0/3 = 0.000$ | 0.000 | 0 |
+| IT0051 | $(2,2,2)$ | 3 | $6/3 = 2.000$ | 1.000 | 2 |
+| IT0053 | $(1,0,2)$ | 3 | $3/3 = 1.000$ | 0.500 | 1 |
+| IT0007 | $(0,\emptyset,0)$ | 2 | $0/2 = 0.000$ | 0.000 | 0 |
 
 IT0007 shows the renormalisation: annotator 2 abstained, so the denominator is 2 rather than 3 and the item contributes normally. IT0053 shows a three-way split — one annotator each at 0, 1 and 2 — which averages to the same $h$ as the unanimous IT0002 while carrying far less information. Four items in the study split three ways.
 
 ### 7.3 Complete-case reporting
 
-Every agreement statistic is computed twice: over all 306 rated items, and over the 292 complete cases. Reporting both makes the influence of the partially rated items visible instead of assumed away. In this study the two sets of estimates are indistinguishable (§9.3).
+Every agreement statistic is computed twice: over all 306 rated items, and over the 292 complete cases. Reporting both makes the influence of the partially rated items visible instead of assumed away. In this study the two sets of estimates are indistinguishable ([Section 9.3](#93-metric-human-agreement-claim-b)).
 
 ---
 
 ## 8. Estimators
 
-All estimators are implemented directly in `validate_cags_human.py` with NumPy and pandas only. Intervals are nonparametric bootstrap percentile intervals over items with $B = 5000$ resamples and seed 42; differences between two statistics use **paired** resampling, so the interval reflects the correlation between them rather than treating them as independent samples.
+All estimators are implemented directly in `validate_cags_human.py` with NumPy and pandas only. Intervals are nonparametric bootstrap percentile intervals [10, 11] over items with $B = 5000$ resamples and seed 42; differences between two statistics use **paired** resampling, so the interval reflects the correlation between them rather than treating them as independent samples.
 
-### 8.1 Krippendorff's $\alpha$, ordinal
+### 8.1 Krippendorff's alpha, ordinal
 
-$\alpha$ is the primary reliability statistic because it absorbs abstentions natively. Units carrying fewer than two ratings are unpairable and contribute nothing to the coincidence matrix, so no listwise deletion occurs and no value is imputed.
+$\alpha$ [1, 2] is the primary reliability statistic because it absorbs abstentions natively. Units carrying fewer than two ratings are unpairable and contribute nothing to the coincidence matrix, so no listwise deletion occurs and no value is imputed.
 
 For each unit $u$ with $m_u \ge 2$ ratings, every ordered pair of distinct ratings contributes $1/(m_u-1)$ to the coincidence matrix $o_{ck}$. Writing $n_c=\sum_k o_{ck}$ and $n=\sum_c n_c$,
 
@@ -311,9 +302,9 @@ $$
 
 The ordinal metric is what makes a 0-versus-2 disagreement cost more than a 1-versus-2 disagreement, and it weights the levels by their observed frequency rather than treating them as equally spaced a priori.
 
-### 8.2 Quadratic-weighted Cohen's $\kappa$
+### 8.2 Quadratic-weighted Cohen's kappa
 
-I report pairwise $\kappa$ alongside $\alpha$ because the pairwise decomposition localises disagreement in a way a single pooled coefficient cannot, and because the mean pairwise $\kappa$ is the natural comparator for the metric-human $\kappa$ in §9.5. With observed joint distribution $O$, expected $E = p_{\text{row}}p_{\text{col}}^\top$, and $K=3$ levels,
+I report pairwise $\kappa$ [3, 4] alongside $\alpha$ because the pairwise decomposition localises disagreement in a way a single pooled coefficient cannot, and because the mean pairwise $\kappa$ is the natural comparator for the metric-human $\kappa$ in [Section 9.5](#95-agreement-relative-to-the-ceiling). With observed joint distribution $O$, expected $E = p_{\text{row}}p_{\text{col}}^\top$, and $K=3$ levels,
 
 $$
 w_{jk} \;=\; \left(\frac{|j-k|}{K-1}\right)^{2},
@@ -321,22 +312,22 @@ w_{jk} \;=\; \left(\frac{|j-k|}{K-1}\right)^{2},
 \kappa_w \;=\; 1-\frac{\sum_{jk} w_{jk} O_{jk}}{\sum_{jk} w_{jk} E_{jk}}.
 $$
 
-### 8.3 Kendall's $\tau_b$
+### 8.3 Kendall's tau-b
 
-$\tau_b$ is the primary agreement statistic between metric and human label. The tie correction is essential here: the human scale has three levels, so ties dominate the pair count, and an uncorrected concordance measure would understate agreement mechanically. For concordant $C$, discordant $D$, and tie counts $T_x, T_y$ within each variable,
+$\tau_b$ [5, 6] is the primary agreement statistic between metric and human label. The tie correction is essential here: the human scale has three levels, so ties dominate the pair count, and an uncorrected concordance measure would understate agreement mechanically. For concordant $C$, discordant $D$, and tie counts $T_x, T_y$ within each variable,
 
 $$
 \tau_b \;=\; \frac{C-D}{\sqrt{(C+D+T_x)(C+D+T_y)}}.
 $$
 
-The implementation admits per-item weights $w_i$ with pair weight $w_iw_j$, which is what the reweighted estimate in §9.7 uses. Spearman's $\rho$ with average ranks is reported alongside for comparability.
+The implementation admits per-item weights $w_i$ with pair weight $w_iw_j$, which is what the reweighted estimate in [Section 9.7](#97-calibration-and-corpus-reweighting) uses. Spearman's $\rho$ [7] with average ranks is reported alongside for comparability.
 
 ### 8.4 AUC within the exact-match-zero subset
 
-On items with $\mathrm{EM}=0$, exact match is constant and therefore carries no information by construction. Within that subset I compute the probability that a response annotators credited outranks one they rejected, ties contributing $\tfrac12$:
+On items with $\mathrm{EM}=0$, exact match is constant and therefore carries no information by construction. Within that subset I compute the probability that a response annotators credited outranks one they rejected, ties contributing $\tfrac12$ [8, 9]:
 
 $$
-\mathrm{AUC} \;=\; \frac{1}{|P|\,|N|}\sum_{i\in P}\sum_{j\in N}\Big[\mathbb{1}\{c_i>c_j\}+\tfrac12\mathbb{1}\{c_i=c_j\}\Big],
+\mathrm{AUC} \;=\; \frac{1}{|P|\,|N|}\sum_{i\in P}\sum_{j\in N}\Big[\mathbf{1}\left[c_i>c_j\right]+\tfrac12\,\mathbf{1}\left[c_i=c_j\right]\Big],
 \qquad
 \begin{aligned}
 P&=\{i:\ h_i>0\}\\
@@ -348,7 +339,7 @@ where $c_i$ is the item's CAGS. I also report a **strict** variant with $P=\{i: 
 
 ### 8.5 Agreement relative to the ceiling
 
-A correlation between a metric and human ratings has no absolute scale — what counts as high depends on how well humans agree with each other. I therefore discretise CAGS to its band level $b_i\in\{0,1,2\}$, compute the quadratic $\kappa$ against $\tilde h$, and form
+A correlation between a metric and human ratings has no absolute scale — what counts as high depends on how well humans agree with each other [17, 18]. I therefore discretise CAGS to its band level $b_i\in\{0,1,2\}$, compute the quadratic $\kappa$ against $\tilde h$, and form
 
 $$
 \text{ceiling ratio} \;=\; \frac{\kappa_w(b,\ \tilde h)}{\overline{\kappa_w(x_r,\ x_s)}}\ ,
@@ -362,7 +353,7 @@ With three or more annotators the harness reports a **leave-one-annotator-out** 
 
 ### 8.7 Corpus reweighting
 
-Because the sample is stratified on CAGS, the design-based statistics estimate a band-balanced population. The reweighted estimate applies
+Because the sample is stratified on CAGS, the design-based statistics estimate a band-balanced population. The reweighted estimate applies Horvitz-Thompson weights [12],
 
 $$
 w_i \;=\; \frac{\Pr_{\text{corpus}}(\text{band}_i)}{\Pr_{\text{sample}}(\text{band}_i)}
@@ -379,7 +370,7 @@ Two conditions are verified before any statistic is computed, because both failu
 **Annotator independence.** For each annotator I report the **unique-dissent rate**, the fraction of items on which that annotator's rating differs from every other annotator's:
 
 $$
-\mathrm{UD}_r \;=\; \frac{1}{|I_r|}\sum_{i\in I_r}\mathbb{1}\big\{x_{ir}\neq x_{is}\ \ \forall s\neq r,\ s\in A_i\big\}.
+\mathrm{UD}_r \;=\; \frac{1}{|I_r|}\sum_{i \in I_r} \mathbf{1}\left[\, x_{ir} \neq x_{is} \ \text{ for every } s \neq r,\ s \in A_i \,\right]
 $$
 
 An independent pass on a three-level scale with genuine disagreement produces a non-trivial rate. A rate of exactly zero over many items indicates a column whose values are always drawn from the set of values other columns already hold — the signature of a derived rather than an independent pass. Reliability statistics are meaningless if the passes are not independent, and that condition is not otherwise checkable from the released artefacts.
@@ -390,7 +381,7 @@ An independent pass on a three-level scale with genuine disagreement produces a 
 
 Every value below is reproduced verbatim in `validation_report.txt` and machine-readably in `validation_summary.csv`.
 
-### 9.1 Inter-annotator reliability — Claim A
+### 9.1 Inter-annotator reliability - Claim A
 
 | Statistic | Value | $n$ |
 |:--|--:|--:|
@@ -400,7 +391,7 @@ Every value below is reproduced verbatim in `validation_report.txt` and machine-
 | $\kappa$, annotator 1 vs 3 | 0.8312 | 306 |
 | $\kappa$, annotator 2 vs 3 | 0.7851 | 292 |
 
-Exact agreement on the raw scale is $0.730$, $0.853$, and $0.777$ for the three pairs. Reliability clears the $0.667$ threshold conventionally taken as adequate, and exceeds $0.80$ for one pair. Claim A holds.
+Exact agreement on the raw scale is $0.730$, $0.853$, and $0.777$ for the three pairs. Reliability clears the $0.667$ threshold conventionally taken as adequate for drawing tentative conclusions [1], and exceeds $0.80$ for one pair. Claim A holds.
 
 ### 9.2 Annotator independence
 
@@ -412,7 +403,7 @@ Exact agreement on the raw scale is $0.730$, $0.853$, and $0.777$ for the three 
 
 All three dissent from both others on a non-trivial fraction of items, consistent with three independent passes.
 
-### 9.3 Metric–human agreement — Claim B
+### 9.3 Metric-human agreement - Claim B
 
 | Statistic | All rated items ($n=306$) | Complete cases ($n=292$) |
 |:--|--:|--:|
@@ -422,9 +413,9 @@ All three dissent from both others on a non-trivial fraction of items, consisten
 | $\rho$, CAGS vs human | 0.7328 | 0.7330 |
 | $\rho$, EM vs human | 0.8044 | 0.8102 |
 
-The two columns are indistinguishable, so the 14 partially rated items exert no influence. The negative difference is a property of the sampling design; §11.2 develops the argument in full.
+The two columns are indistinguishable, so the 14 partially rated items exert no influence. The negative difference is a property of the sampling design; [Section 11.2](#112-overall-rank-correlation-does-not-support-a-cags-versus-em-comparison-on-this-sample) develops the argument in full.
 
-### 9.4 Discrimination within EM $=0$ — Claim C
+### 9.4 Discrimination within exact match = 0 - Claim C
 
 | Statistic | Value | Counts |
 |:--|--:|:--|
@@ -467,7 +458,7 @@ Mean human rating increases monotonically across the bands, so the bands order r
 
 The relation is not the identity, and I do not expect it to be. CAGS is chance-adjusted and human ratings are not: subtracting the credit a confused guesser would earn from an item's own distractor set systematically depresses scores where distractors sit close to the reference answer. This is why CAGS is stricter than annotators in the low band ($0.036$ against $0.248$) while being marginally more generous in the mid band. Rank agreement is the interpretable comparison; absolute agreement is reported for completeness.
 
-Under corpus reweighting, $\tau_b = 0.8181$. The largest weight ratio is $53.75\!:\!1$, implying a small effective sample size, so the design-based estimate in §9.3 remains primary.
+Under corpus reweighting, $\tau_b = 0.8181$. The largest weight ratio is $53.75\!:\!1$, implying a small effective sample size, so the design-based estimate in [Section 9.3](#93-metric-human-agreement-claim-b) remains primary.
 
 ### 9.8 Breakdown by category and family
 
@@ -485,79 +476,183 @@ Under corpus reweighting, $\tau_b = 0.8181$. The largest weight ratio is $53.75\
 | `visibility_partset` | 40 | **0.8063** | 0.7977 | 0.3611 | 0.4542 |
 | `visibility_side` | 41 | 0.5638 | 0.6695 | 0.5415 | 0.6301 |
 
-Cell counts range from 21 to 102 and no per-cell interval is reported; these tables are descriptive and the pooled statistics in §9.3 and §9.4 carry the inferential claims.
+Cell counts range from 21 to 102 and no per-cell interval is reported; these tables are descriptive and the pooled statistics in Sections [9.3](#93-metric-human-agreement-claim-b) and [9.4](#94-discrimination-within-exact-match-0-claim-c) carry the inferential claims.
 
 ---
 
 ## 10. Worked Examples
 
-The examples below trace individual items from kernel arithmetic through to the human rating. Kernel values use the schematic part layout for legibility; the deployed pipeline substitutes an empirical layout estimated from CUB part annotations, so the released CAGS values differ slightly from the illustrative arithmetic.
+Six items traced end to end, from the kernel arithmetic that produces the CAGS value to the ratings the annotators independently assign. Each is shown as the annotation card the annotators actually saw, so the judgement can be checked against the same evidence they had.
 
-### 10.1 An item where the metric and annotators agree — IT0002
+Kernel values below use the **schematic** part layout for legibility. The deployed pipeline substitutes an empirical layout estimated from CUB part annotations, so the illustrative arithmetic differs slightly from the released CAGS values; both are given wherever they diverge.
 
-> *What is the throat color of this bird?* Options: (A) black, (B) green, (C) buff, (D) purple, (E) white
-> Reference **(E) white** · Model **(C) buff** · Ratings $(1,1,1)$ · $h = 0.500$ · CAGS $= 0.4434$
+---
 
-Buff and white are adjacent in CIELAB. The exponential colour kernel at $\tau = 30$ gives
+### 10.1 Metric and annotators agree - IT0002
 
-$$
-s(\text{buff},\text{white}) = \exp\!\big(-\Delta E_{00}/30\big) = 0.580 ,
-$$
+<p align="center">
+  <img src="cards/IT0002.png" alt="Annotation card IT0002" width="460">
+</p>
 
-and the item's remaining distractors — black, green, purple — sit far from white, so the chance baseline is low and most of the raw similarity survives the adjustment. All three annotators independently choose the middle level. The metric places the response near the middle of its range; the annotators place it exactly at the middle of theirs.
+| Field | Value |
+|:--|:--|
+| Question | *What is the throat color of this bird?* (A) black, (B) green, (C) buff, (D) purple, (E) white |
+| Reference | (E) white |
+| Model | (C) buff |
+| Ratings | $(1,1,1)$ &nbsp;&rarr;&nbsp; $h = 0.500$ |
+| CAGS | 0.4434 &nbsp;&middot;&nbsp; band `mid` &nbsp;&middot;&nbsp; family `attr_bare_value` |
 
-### 10.2 The metric over-credits — IT0244
-
-> *What is the body part of this bird marked with the yellow cross?*
-> Reference **(C) left wing** · Model **(D) right wing** · Ratings $(0,0,0)$ · $h = 0.000$ · CAGS $= 0.5884$
-
-The anatomy kernel scores part similarity as normalised Euclidean distance in a three-dimensional layout, $s(p,q) = 1 - \lVert p-q\rVert/d_{\max}$. In the schematic layout, left and right wing sit at $(0.55,0.45,\mp 0.05)$ with $d_{\max}=0.856$, so
-
-$$
-s(\text{left wing},\text{right wing}) \;=\; 1-\frac{0.10}{0.856} \;=\; 0.883 .
-$$
-
-With a five-option set the chance baseline is $b = 0.689$, giving
+**How the score arises.** Both terms are colours, so the item routes to the colour kernel. Each term maps to an sRGB anchor, converts to CIELAB, and the perceptual distance between them is computed with CIEDE2000 [19, 20]. Buff and white are close in that space, and the exponential kernel at temperature $\tau = 30$ converts the distance to a similarity:
 
 $$
-\mathrm{CAGS} \;=\; \frac{0.883-0.689}{1-0.689} \;=\; 0.625 ,
+s(\text{buff},\text{white}) \;=\; \exp\!\big(-\Delta E_{00}(\text{buff},\text{white})\,/\,30\big) \;=\; 0.580 .
 $$
 
-against the released value of $0.588$ under the empirical layout. Every annotator scores the response zero. The failure is precise: laterality is a **categorical** distinction, and a symmetric metric layout with a small lateral offset cannot represent it. §11.3 develops the consequence.
+The item's other three distractors — black, green, purple — are far from white, so the chance baseline $b$, the mean similarity of the distractor set to the reference, stays low and most of the raw similarity survives the chance adjustment.
 
-### 10.3 The metric is stricter than annotators — IT0139
+**Why it matters.** This is the case the graded metric exists to handle. Exact match scores the response 0, identically to a response of "black". CAGS places it near the middle of its range, and all three annotators independently choose the middle level of theirs. The metric and the annotators are making the same distinction, and they are making it on an item where exact match makes none.
 
-> *What is the back color of this bird?* Options include (A) grey, (B) white
-> Reference **(B) white** · Model **(A) grey** · $h = 1.000$ · CAGS $= 0.0989$
+---
 
-The colour kernel gives $s(\text{grey},\text{white}) = 0.330$, and because the option set contains other pale terms the chance baseline is nearly as high, at $b = 0.296$:
+### 10.2 The metric over-credits - IT0244
+
+<p align="center">
+  <img src="cards/IT0244.png" alt="Annotation card IT0244" width="460">
+</p>
+
+| Field | Value |
+|:--|:--|
+| Question | *What is the body part of this bird marked with the yellow cross?* |
+| Reference | (C) left wing |
+| Model | (D) right wing |
+| Ratings | $(0,0,0)$ &nbsp;&rarr;&nbsp; $h = 0.000$ |
+| CAGS | 0.5884 &nbsp;&middot;&nbsp; band `mid` &nbsp;&middot;&nbsp; family `marker_localization` |
+
+**How the score arises.** The anatomy kernel places every annotated part at a coordinate in a three-dimensional layout and scores similarity as complement of normalised Euclidean distance,
 
 $$
-\mathrm{CAGS} \;=\; \frac{0.330-0.296}{1-0.296} \;=\; 0.049 .
+s(p,q) \;=\; \max\!\Big(0,\ 1-\frac{\lVert p-q\rVert}{d_{\max}}\Big),
 $$
 
-The chance adjustment is doing exactly what it is designed to do — a response only slightly better than a confused guess earns almost nothing. All three annotators nevertheless rate the response fully correct, because on this photograph they judge grey the better description. This is a disagreement with the CUB label, not with the kernel.
+where $d_{\max}$ is the diameter of the layout. Left and right wing sit at $(0.55,\,0.45,\,-0.05)$ and $(0.55,\,0.45,\,+0.05)$, so they differ only in the lateral coordinate $z$, by $0.10$, against a layout diameter of $d_{\max} = 0.856$:
 
-### 10.4 A reference-label error — IT0051
+$$
+s(\text{left wing},\ \text{right wing}) \;=\; 1-\frac{0.10}{0.856} \;=\; 0.883 .
+$$
 
-> *Which of the eyes of the bird are visible in this image?* Options: (A) Left, (B) Right, (C) Both, (D) None
-> Reference **(D) None** · Model **(A) Left** · Ratings $(2,2,2)$ · $h = 1.000$ · CAGS $= 0.0000$
+With a five-option set the distractors average $b = 0.689$ similarity to the reference, and the chance adjustment gives
 
-Under the set-overlap kernel, $\{L\}$ and $\varnothing$ share nothing, so the soft Jaccard is zero and no partial credit is available. All three annotators can see the bird's left eye and credit the model in full. No adjustment to the metric would fix this item; the reference answer is wrong.
+$$
+\mathrm{CAGS} \;=\; \frac{s-b}{1-b} \;=\; \frac{0.883-0.689}{1-0.689} \;=\; 0.625 ,
+$$
 
-### 10.5 An item where annotators split three ways — IT0053
+against the released $0.588$ under the empirical layout.
 
-> *Which of the following is the most prominently visible physical trait of the bird in this image?*
-> Reference **(E) bill color: brown** · Model **(A) breast color: brown** · Ratings $(1,0,2)$ · $h = 0.500$ · CAGS $= 0.5954$
+**Why it matters.** All three annotators score the response zero: naming the wrong wing is not a near miss, it is the wrong part. The kernel disagrees because the two parts are $0.10$ apart in a space whose diameter is $0.856$, and it has no way to know that this particular displacement is categorical rather than gradual. Every other axis of the layout encodes genuine anatomical proximity — beak is near forehead, belly is near breast — and along those axes the kernel is well behaved. Laterality is the one distinction that a symmetric metric embedding cannot represent, and this item is where that shows. [Section 11.3](#113-the-anatomy-kernel-over-credits-contralateral-confusions) traces the consequence across the whole family.
 
-The paired-attribute kernel mixes group similarity and value similarity, $s = \alpha\,s_{\text{group}} + (1-\alpha)\,s_{\text{value}}$ with $\alpha = 0.5$. The value matches exactly (brown), the group does not (bill against breast), so the response lands near the middle. The annotators disagree completely — one each at 0, 1, and 2 — because *most prominently visible* is a genuinely graded judgement about which trait dominates a photograph. The aggregate coincides with the unanimous $h$ of IT0002 while carrying far less information, which is precisely the phenomenon §11.5 quantifies.
+---
 
-### 10.6 A partially rated item — IT0007
+### 10.3 The metric is stricter than annotators - IT0139
 
-> *What is the wing shape of this bird?*
-> Reference **(C) rounded-wings** · Model **(D) pointed-wings** · Ratings $(0,\varnothing,0)$ · $h = 0.000$ · CAGS $= 0.0000$
+<p align="center">
+  <img src="cards/IT0139.png" alt="Annotation card IT0139" width="460">
+</p>
 
-Annotator 2 abstains. Renormalisation over $A_i = \{1,3\}$ gives $h = \tfrac12\cdot\tfrac{0+0}{2} = 0$, and the item participates fully in every statistic. Under listwise deletion it would have been dropped, discarding two valid ratings and biasing the sample toward items that are easy to rate.
+| Field | Value |
+|:--|:--|
+| Question | *What is the back color of this bird?* options include (A) grey, (B) white |
+| Reference | (B) white |
+| Model | (A) grey |
+| Ratings | $(2,2,2)$ &nbsp;&rarr;&nbsp; $h = 1.000$ |
+| CAGS | 0.0989 &nbsp;&middot;&nbsp; band `low` &nbsp;&middot;&nbsp; family `attr_bare_value` |
+
+**How the score arises.** Grey and white are separated in CIELAB mainly by lightness, giving a raw similarity of $s(\text{grey},\text{white}) = 0.330$. The option set, however, contains further pale terms, so an uninformed guess also lands close to the reference and the chance baseline is nearly as high, $b = 0.296$:
+
+$$
+\mathrm{CAGS} \;=\; \frac{0.330-0.296}{1-0.296} \;=\; 0.049 ,
+$$
+
+against the released $0.099$. Almost all of the raw similarity is absorbed by the chance term.
+
+**Why it matters.** The arithmetic is behaving exactly as designed. Chance adjustment exists precisely so that a response only marginally better than a confused guess earns almost nothing, and on an option set of pale colours "grey for white" is marginally better than a guess. What the annotators are disagreeing with is not the kernel but the reference label: looking at this photograph, all three judge grey the better description of the bird's back. The item therefore measures the accuracy of the CUB attribute annotation, not the behaviour of the metric, and it belongs to the group analysed in [Section 11.4](#114-items-where-cags-is-stricter-than-annotators-reflect-reference-label-disagreement).
+
+---
+
+### 10.4 A reference-label error - IT0051
+
+<p align="center">
+  <img src="cards/IT0051.png" alt="Annotation card IT0051" width="460">
+</p>
+
+| Field | Value |
+|:--|:--|
+| Question | *Which of the eyes of the bird are visible in this image?* (A) Left, (B) Right, (C) Both, (D) None |
+| Reference | (D) None |
+| Model | (A) Left |
+| Ratings | $(2,2,2)$ &nbsp;&rarr;&nbsp; $h = 1.000$ |
+| CAGS | 0.0000 &nbsp;&middot;&nbsp; band `low` &nbsp;&middot;&nbsp; family `visibility_side` |
+
+**How the score arises.** Laterality options map to sets of visible sides: Left $\mapsto \{L\}$, Right $\mapsto \{R\}$, Both $\mapsto \{L,R\}$, None $\mapsto \emptyset$. Similarity is a soft Jaccard index over those sets. The reference set is empty and the response set is $\{L\}$, so the intersection is empty and
+
+$$
+s \;=\; \frac{|\{L\} \cap \emptyset|}{|\{L\} \cup \emptyset|} \;=\; 0 ,
+$$
+
+with no partial credit available at any parameter setting. The chance baseline over the remaining options is also low, so CAGS is exactly zero.
+
+**Why it matters.** This item is unfixable by any adjustment to the metric, because the failure is upstream of scoring. The bird's left eye is plainly visible in the photograph; all three annotators see it and credit the model in full. The reference answer is wrong. Items of this shape are what the abstention mechanism ([Section 6.3](#63-independence-and-abstention)) is designed to surface, and they place a floor on the agreement any metric can reach with human judgement on this corpus.
+
+---
+
+### 10.5 Annotators split three ways - IT0053
+
+<p align="center">
+  <img src="cards/IT0053.png" alt="Annotation card IT0053" width="460">
+</p>
+
+| Field | Value |
+|:--|:--|
+| Question | *Which of the following is the most prominently visible physical trait of the bird in this image?* |
+| Reference | (E) bill color: brown |
+| Model | (A) breast color: brown |
+| Ratings | $(1,0,2)$ &nbsp;&rarr;&nbsp; $h = 0.500$ |
+| CAGS | 0.5954 &nbsp;&middot;&nbsp; band `mid` &nbsp;&middot;&nbsp; family `attr_group_value` |
+
+**How the score arises.** Options in this family are `group: value` pairs, so the kernel decomposes into a group term and a value term,
+
+$$
+s \;=\; \alpha\, s_{\text{group}} + (1-\alpha)\, s_{\text{value}}, \qquad \alpha = 0.5 ,
+$$
+
+with $s_{\text{group}}$ itself the mean of an anatomical-region similarity and a property-match indicator. Here the value matches exactly — brown against brown, so $s_{\text{value}} = 1$ — while the group does not, since bill and breast are different regions carrying the same property. The response therefore lands near the middle of the range.
+
+**Why it matters.** The annotators disagree completely: one each at 0, 1, and 2. This is not carelessness. Deciding which trait is *most prominently visible* is a graded perceptual judgement about what dominates a photograph, and three people can reasonably rank a brown bill against a brown breast differently. The aggregate $h = 0.500$ is numerically identical to the unanimous $h$ of IT0002 while carrying far less information about where the truth lies. Four items in the study split this way, and all of them fall in families where the underlying judgement is intrinsically graded. [Section 11.5](#115-disagreement-concentrates-in-the-partial-credit-category) quantifies the effect on the measurable ceiling.
+
+---
+
+### 10.6 A partially rated item - IT0007
+
+<p align="center">
+  <img src="cards/IT0007.png" alt="Annotation card IT0007" width="460">
+</p>
+
+| Field | Value |
+|:--|:--|
+| Question | *What is the wing shape of this bird?* (A) long-wings, (B) broad-wings, (C) rounded-wings, (D) pointed-wings, (E) tapered-wings |
+| Reference | (C) rounded-wings |
+| Model | (D) pointed-wings |
+| Ratings | $(0,\ \emptyset,\ 0)$ &nbsp;&rarr;&nbsp; $h = 0.000$ |
+| CAGS | 0.0000 &nbsp;&middot;&nbsp; band `low` &nbsp;&middot;&nbsp; family `attr_bare_value` |
+
+**How the score arises.** Wing shape is a nominal attribute with no ordinal scale and no colour anchors, so the kernel falls back to token overlap between the two option strings. "Rounded-wings" and "pointed-wings" share only the token *wings*, which every option in the set shares, so the raw similarity does not exceed the chance baseline and CAGS is zero.
+
+**Why it matters.** Annotator 2 abstains: from this view the wing is folded and its shape is not determinable, so the reference label cannot be checked against the photograph. Renormalising over $A_i = \{1,3\}$ gives
+
+$$
+h \;=\; \tfrac12 \cdot \frac{0+0}{2} \;=\; 0 ,
+$$
+
+and the item participates fully in every statistic. Under listwise deletion it would have been discarded, throwing away two valid ratings and biasing the sample toward items that happen to be easy to rate — which is precisely the direction that would inflate every agreement number in the study. This is why abstention is modelled as a missing value rather than as a zero ([Section 6.3](#63-independence-and-abstention)).
 
 ---
 
@@ -581,7 +676,7 @@ The cross-tabulation is degenerate:
 
 CAGS equals exactly $1$ when a response is an exact match, so the high band coincides with $\mathrm{EM}=1$ by construction, and the strata are drawn on CAGS. Exact match is therefore a binary predictor that splits the sample precisely along the stratification variable. Under $\tau_b$ it orders only the $102\times 204 = 20{,}808$ cross-stratum pairs and declines to order the remaining $25{,}857$ pairs, which enter as ties in $T_x$ and cost it nothing. CAGS orders all $\binom{306}{2} = 46{,}665$ pairs, including the hard within-band ones, and absorbs the resulting errors. The comparison rewards abstention from ordering.
 
-The comparison the design does support is the within-stratum one, and that is §9.4: restricted to the 204 items exact match collapses to a single value, CAGS separates credited from rejected responses at $\mathrm{AUC}=0.676$ $[0.591,\ 0.757]$. No exact-match-derived quantity produces a non-degenerate value on that subset.
+The comparison the design does support is the within-stratum one, and that is [Section 9.4](#94-discrimination-within-exact-match-0-claim-c): restricted to the 204 items exact match collapses to a single value, CAGS separates credited from rejected responses at $\mathrm{AUC}=0.676$ $[0.591,\ 0.757]$. No exact-match-derived quantity produces a non-degenerate value on that subset.
 
 I report the negative difference explicitly rather than omitting it, because it is the first comparison a reader computes and because the explanation is structural and checkable from the released cross-tabulation.
 
@@ -595,7 +690,7 @@ I report the negative difference explicitly rather than omitting it, because it 
 | IT0305 | (A) left wing | (C) right wing | 0.5693 | 0.0 |
 | IT0097 | (D) left wing | (C) right wing | 0.5594 | 0.0 |
 
-As §10.2 shows, the lateral coordinate $z=\pm0.05$ is small relative to the layout diameter $d_{\max}=0.856$, so mirrored parts are near-coincident and score around $0.56$–$0.59$ where annotators score zero. The diagnosis is specific: laterality is categorical and a symmetric metric layout does not encode it.
+As [Section 10.2](#102-the-metric-over-credits-it0244) shows, the lateral coordinate $z=\pm0.05$ is small relative to the layout diameter $d_{\max}=0.856$, so mirrored parts are near-coincident and score around $0.56$–$0.59$ where annotators score zero. The diagnosis is specific: laterality is categorical and a symmetric metric layout does not encode it.
 
 The complementary family behaves in the opposite direction. `visibility_partset` attains $\tau_b = 0.8063$, the highest of the five, with the metric slightly stricter than annotators. Set-overlap scoring over explicitly enumerated parts requires no distance assumption and correspondingly incurs no calibration error. The contrast is informative: the graded machinery is well calibrated wherever the underlying space is genuinely metric, and miscalibrated where a categorical distinction has been embedded in a metric space.
 
@@ -616,29 +711,29 @@ The remaining three are colour items of the IT0139 type, where annotators judge 
 
 ### 11.5 Disagreement concentrates in the partial-credit category
 
-Agreement between annotators is near-perfect at the endpoints of the scale and weakest in the middle. Across the 904 ratings, the modal disagreement is one annotator assigning 1 where another assigns 0 or 2; four items split three ways, and every one of them is a `attr_group_value` or `visibility_side` item where the judgement is intrinsically graded (§10.5).
+Agreement between annotators is near-perfect at the endpoints of the scale and weakest in the middle. Across the 904 ratings, the modal disagreement is one annotator assigning 1 where another assigns 0 or 2; four items split three ways, and every one of them is a `attr_group_value` or `visibility_side` item where the judgement is intrinsically graded ([Section 10.5](#105-annotators-split-three-ways-it0053)).
 
-This is a threshold-placement difference rather than a competence difference — annotators agree on what is right and what is wrong, and differ on how much proximity earns partial credit. It nonetheless bounds the achievable AUC in §9.4 from above, because the criterion is least reliable exactly where the metric is being tested most sharply. The measured $0.676$ should be read against that bound rather than against $1.0$.
+This is a threshold-placement difference rather than a competence difference — annotators agree on what is right and what is wrong, and differ on how much proximity earns partial credit. It nonetheless bounds the achievable AUC in [Section 9.4](#94-discrimination-within-exact-match-0-claim-c) from above, because the criterion is least reliable exactly where the metric is being tested most sharply. The measured $0.676$ should be read against that bound rather than against $1.0$.
 
 ---
 
 ## 12. Threats to Validity
 
-**Model coverage.** The study covers three of the eighteen evaluated models, the top three by CAGS. Kernel calibration is a property of the scoring function rather than of the model, so the findings in §11.3 and §11.4 transfer; the response distribution does not, and lower-scoring models place more mass in the low band, where §9.7 shows the largest metric–human gap.
+**Model coverage.** The study covers three of the eighteen evaluated models, the top three by CAGS. Kernel calibration is a property of the scoring function rather than of the model, so the findings in Sections [11.3](#113-the-anatomy-kernel-over-credits-contralateral-confusions) and [11.4](#114-items-where-cags-is-stricter-than-annotators-reflect-reference-label-disagreement) transfer; the response distribution does not, and lower-scoring models place more mass in the low band, where [Section 9.7](#97-calibration-and-corpus-reweighting) shows the largest metric–human gap.
 
 **Category coverage.** *Taxonomy & Naming* is excluded, so the name-similarity and genus-agreement kernels are unvalidated by this study.
 
-**Stratified design.** Sample statistics estimate a band-balanced population rather than the corpus. §9.7 gives the reweighted estimate; its largest weight ratio of $53.75\!:\!1$ implies a small effective sample size, and the design-based estimate is primary.
+**Stratified design.** Sample statistics estimate a band-balanced population rather than the corpus. [Section 9.7](#97-calibration-and-corpus-reweighting) gives the reweighted estimate; its largest weight ratio of $53.75\!:\!1$ implies a small effective sample size, and the design-based estimate is primary.
 
-**Criterion noise in the partial category.** Inter-annotator agreement is weakest on the middle level of the scale, which caps the measurable metric–human agreement in the region that matters most for a graded metric (§11.5).
+**Criterion noise in the partial category.** Inter-annotator agreement is weakest on the middle level of the scale, which caps the measurable metric–human agreement in the region that matters most for a graded metric ([Section 11.5](#115-disagreement-concentrates-in-the-partial-credit-category)).
 
 **Reference-label noise.** The $4.58\%$ abstention rate and the composition of the negative discrepancy table both indicate residual error in CUB-200-2011 attribute and visibility annotations. This study measures that error rather than correcting it.
 
-**Cell sizes in the breakdowns.** Per-family counts range from 21 to 102. §9.8 is descriptive and carries no intervals.
+**Cell sizes in the breakdowns.** Per-family counts range from 21 to 102. [Section 9.8](#98-breakdown-by-category-and-family) is descriptive and carries no intervals.
 
 **Single-site annotation.** All three annotators work from the same rendered cards and the same written rubric, so shared misreadings of the rubric are not detectable from these data.
 
-**No post-hoc adjustment.** No kernel, constant, or scoring rule is modified after the ratings are collected. The calibration failure identified in §11.3 is reported as a finding rather than repaired, so the study remains a test of the metric as evaluated rather than a fit to the validation data.
+**No post-hoc adjustment.** No kernel, constant, or scoring rule is modified after the ratings are collected. The calibration failure identified in [Section 11.3](#113-the-anatomy-kernel-over-credits-contralateral-confusions) is reported as a finding rather than repaired, so the study remains a test of the metric as evaluated rather than a fit to the validation data.
 
 ---
 
@@ -666,11 +761,11 @@ python ../setup_manual_review_pdf_annotate.py \
   --pdf
 ```
 
-**Stage 3 — validate.** Computes every statistic in §9 and writes the three output artefacts.
+**Stage 3 — validate.** Computes every statistic in [Section 9](#9-results) and writes the three output artefacts.
 
 ```bash
 python validate_cags_human.py \
-  --ratings   ./ratings_filled.csv \
+  --ratings   ./ratings_filled_r3.csv \
   --key       ./annotation_key.csv \
   --base_dir  <dataset_root> \
   --bootstrap 5000 \
@@ -691,7 +786,8 @@ Human Study/
 ├── INSTRUCTIONS.txt             rating scale and protocol given to annotators
 ├── annotation_sheet.csv         blind sheet: items and empty rating columns
 ├── annotation_key.csv           withheld key: model, category, family, CAGS, band
-├── ratings_filled.csv           completed sheet from annotators 
+├── ratings_filled.csv           completed sheet, annotators 1–2
+├── ratings_filled_r3.csv        completed sheet, annotators 1–3   ← analysis input
 ├── cards/
 │   └── annotation_cards.pdf     one rendered card per item
 ├── validation_report.txt        full report, sections 1–13
@@ -703,7 +799,7 @@ Human Study/
 |:--|:--|
 | `annotation_sheet.csv` | `item_id`, `image_path`, `question`, `gold_answer`, `model_answer`, `rater1` … `raterR`. No metric value, band, or model identity. |
 | `annotation_key.csv` | `item_id`, `model`, `category`, `family`, `cags`, `exact`, `band`, `resolve_status`. One row per sheet row; withheld until rating is complete. |
-| `ratings_filled.csv` | The sheet with annotator columns populated. Values begin with `0`, `1`, or `2`; empty cells denote abstention. Free-text remark columns may be present and are ignored by the harness. |
+| `ratings_filled_r3.csv` | The sheet with annotator columns populated. Values begin with `0`, `1`, or `2`; empty cells denote abstention. Free-text remark columns may be present and are ignored by the harness. |
 | `validation_summary.csv` | `statistic`, `value`, `ci_low`, `ci_high`, `n`, `note`. One row per reported quantity, including every pairwise $\kappa$, every unique-dissent rate, both agreement blocks, both AUC variants, the ceiling ratio, the aggregation-sensitivity extrema, and the reweighting diagnostics. |
 | `validation_items.csv` | `item_id`, `model`, `category`, `family`, `band`, `cags`, `exact`, `resolve_status`, one column per annotator, `n_ratings`, `h_raw`, `h`, `h_level`, `metric_level`. The atom from which every statistic is computed, and sufficient to recompute all of them independently. |
 
@@ -726,3 +822,50 @@ Human Study/
 | **Complete case** | An item rated by every annotator. |
 | **Chance baseline $b$** | Mean raw kernel similarity of an item's own distractors to its reference answer; the quantity CAGS subtracts. |
 | **Intervals** | Nonparametric bootstrap percentile intervals over items, $B=5000$, seed 42; differences use paired resampling. |
+
+---
+
+## 16. References
+
+Methodological choices in [Section 8](#8-estimators) follow the sources below. Numbers correspond to the inline markers.
+
+**Inter-annotator reliability**
+
+1. Krippendorff, K. (2019). *Content Analysis: An Introduction to Its Methodology*, 4th ed. SAGE. — Definition of $\alpha$, the ordinal difference function, and the $0.667$ / $0.800$ interpretive thresholds.
+2. Hayes, A. F., & Krippendorff, K. (2007). Answering the call for a standard reliability measure for coding data. *Communication Methods and Measures*, 1(1), 77–89. — Computational formulation of $\alpha$ from the coincidence matrix, including the treatment of missing values.
+3. Cohen, J. (1960). A coefficient of agreement for nominal scales. *Educational and Psychological Measurement*, 20(1), 37–46. — Chance-corrected pairwise agreement.
+4. Cohen, J. (1968). Weighted kappa: nominal scale agreement with provision for scaled disagreement or partial credit. *Psychological Bulletin*, 70(4), 213–220. — Quadratic disagreement weights on an ordered scale.
+
+**Rank agreement**
+
+5. Kendall, M. G. (1938). A new measure of rank correlation. *Biometrika*, 30(1–2), 81–93.
+6. Kendall, M. G. (1945). The treatment of ties in ranking problems. *Biometrika*, 33(3), 239–251. — The $\tau_b$ tie correction used throughout.
+7. Spearman, C. (1904). The proof and measurement of association between two things. *American Journal of Psychology*, 15(1), 72–101.
+
+**Discrimination**
+
+8. Mann, H. B., & Whitney, D. R. (1947). On a test of whether one of two random variables is stochastically larger than the other. *Annals of Mathematical Statistics*, 18(1), 50–60. — The rank statistic underlying the AUC in [Section 8.4](#84-auc-within-the-exact-match-zero-subset).
+9. Hanley, J. A., & McNeil, B. J. (1982). The meaning and use of the area under a receiver operating characteristic (ROC) curve. *Radiology*, 143(1), 29–36.
+
+**Resampling and weighting**
+
+10. Efron, B. (1979). Bootstrap methods: another look at the jackknife. *Annals of Statistics*, 7(1), 1–26.
+11. Efron, B., & Tibshirani, R. J. (1993). *An Introduction to the Bootstrap*. Chapman & Hall. — Percentile intervals and paired resampling for differences of statistics.
+12. Horvitz, D. G., & Thompson, D. J. (1952). A generalization of sampling without replacement from a finite universe. *Journal of the American Statistical Association*, 47(260), 663–685. — Inverse-probability weighting used in [Section 9.7](#97-calibration-and-corpus-reweighting).
+
+**Data and design**
+
+13. Wah, C., Branson, S., Welinder, P., Perona, P., & Belongie, S. (2011). *The Caltech-UCSD Birds-200-2011 Dataset*. Technical Report CNS-TR-2011-001, California Institute of Technology. — Source of the images, attribute annotations, and part annotations.
+14. Cochran, W. G. (1977). *Sampling Techniques*, 3rd ed. Wiley. — Stratified sampling and the estimation of population quantities from disproportionate strata.
+
+**Validating automatic metrics against human judgement**
+
+15. Callison-Burch, C., Osborne, M., & Koehn, P. (2006). Re-evaluating the role of BLEU in machine translation research. *Proceedings of EACL*, 249–256. — Demonstration that internal properties of a metric do not establish its agreement with human judgement.
+16. Zhang, T., Kishore, V., Wu, F., Weinberger, K. Q., & Artzi, Y. (2020). BERTScore: evaluating text generation with BERT. *Proceedings of ICLR*. — Correlation with human ratings as the primary validation of a similarity-based metric.
+17. Freitag, M., Foster, G., Grangier, D., Ratnakar, V., Tan, Q., & Macherey, W. (2021). Experts, errors, and context: a large-scale study of human evaluation for machine translation. *Transactions of the ACL*, 9, 1460–1474. — Graded human judgement as the criterion, and inter-annotator agreement as the ceiling against which metric agreement is read.
+18. Artstein, R., & Poesio, M. (2008). Inter-coder agreement for computational linguistics. *Computational Linguistics*, 34(4), 555–596. — Reading chance-corrected agreement coefficients, and the role of the human ceiling in interpreting them.
+
+**Colour difference**
+
+19. CIE (2001). *Improvement to Industrial Colour-Difference Evaluation*. CIE Publication 142-2001, Central Bureau of the CIE, Vienna. — The CIEDE2000 formula.
+20. Sharma, G., Wu, W., & Dalal, E. N. (2005). The CIEDE2000 colour-difference formula: implementation notes, supplementary test data, and mathematical observations. *Color Research & Application*, 30(1), 21–30. — The implementation followed by the colour kernel.
