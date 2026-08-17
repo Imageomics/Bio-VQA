@@ -60,19 +60,19 @@ Two properties of a graded metric are independent, and only one of them is check
 
 **External validity** asks whether the ordering the metric imposes on wrong answers matches the ordering a person imposes. This is the standard by which automatic evaluation metrics are assessed elsewhere: a metric earns its place by correlating with human judgement, not by internal coherence [15, 16, 17]. Nothing internal to the scoring pipeline can answer this, because the pipeline has no access to a criterion outside itself. The only available criterion is human judgement, elicited independently, from people who cannot see the metric's output.
 
-I run this study because the graded axis is the contestable part of the evaluation. Exact match needs no validation — its semantics are definitional. CAGS makes a substantive empirical claim every time it awards 0.59 rather than 0.00 to a wrong answer, and that claim is either supported by human judgement or it is not.
+We run this study because the graded axis is the contestable part of the evaluation. Exact match needs no validation — its semantics are definitional. CAGS makes a substantive empirical claim every time it awards 0.59 rather than 0.00 to a wrong answer, and that claim is either supported by human judgement or it is not.
 
 ---
 
 ## 3. Validation Objectives
 
-I separate the validation into three claims and test them in order, because collapsing them produces a study that appears to establish more than it does.
+We separate the validation into three claims and test them in order, because collapsing them produces a study that appears to establish more than it does.
 
 **Claim A — the human reference is reliable.** Human ratings can serve as a criterion only if they reproduce across annotators. This is a gate rather than a result: if it fails, every downstream statistic is uninterpretable, because a correlation with an unreliable criterion is uninformative in both directions.
 
 **Claim B — CAGS orders responses as annotators order them.** Rank agreement between the metric and the aggregated human rating, with a bootstrap interval, and read against the agreement annotators achieve among themselves.
 
-**Claim C — CAGS recovers structure that exact match discards.** This is the claim that justifies the metric existing at all. I test it by restricting attention to the responses exact match scores zero — where exact match has zero variance and therefore zero information — and asking whether CAGS separates the responses annotators credited from those they rejected.
+**Claim C — CAGS recovers structure that exact match discards.** This is the claim that justifies the metric existing at all. We test it by restricting attention to the responses exact match scores zero — where exact match has zero variance and therefore zero information — and asking whether CAGS separates the responses annotators credited from those they rejected.
 
 The study does not test whether CAGS is the best achievable graded metric, whether the kernel constants are optimal, or whether the leaderboard would be identical under a different graded scheme. It tests whether the graded axis carries human-recognisable signal, and it localises the places where it does not.
 
