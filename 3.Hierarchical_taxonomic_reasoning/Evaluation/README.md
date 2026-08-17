@@ -1,11 +1,24 @@
-# Hierarchical Taxonomic Reasoning — Component C1 of BioVQA
+<h1 align="center">Bio-VQA &rarr; Hierarchical Taxonomic Reasoning &rarr; Evaluation</h1>
+<p align="center">
+  <b>Hierarchical Taxonomic Reasoning &mdash; Model Evaluation &amp; Scoring Pipeline</b>
+</p>
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/python-3.9%2B-blue">
+  <img alt="DuckDB" src="https://img.shields.io/badge/engine-DuckDB-yellow">
+  <img alt="Dataset" src="https://img.shields.io/badge/source-TreeOfLife--200M-green">
+  <img alt="Specialist" src="https://img.shields.io/badge/baseline-BioCLIP--2-orange">
+  <img alt="Taxonomy" src="https://img.shields.io/badge/synonyms-GBIF%20Backbone-lightgrey">
+  <img alt="Scheduler" src="https://img.shields.io/badge/scheduler-SLURM-red">
+  <img alt="Status" src="https://img.shields.io/badge/status-active-brightgreen">
+</p>
 
 > An evaluation of hierarchical taxonomic identification in vision–language models,
 > from phylum to species and vernacular name, against a domain-specialist reference.
 > This document describes the evaluation protocol, the scoring calculus, the specialist
 > baseline, and the empirical findings, and gives the exact commands to reproduce them.
-
+ 
 ---
+
 
 ## Table of contents
 
@@ -47,7 +60,7 @@
    - 8.3 [Interpretation](#83-interpretation)
 9. [Reproduction](#9-reproduction)
 10. [Outputs](#10-outputs)
-11. [Design references](#11-design-references)
+11. [References](#11-references)
 
 ---
 
@@ -122,8 +135,8 @@ produce the specialist baseline that feeds its answers into the scorer.
 
 ```
                           ┌─────────────────────────────┐
-                          │   GBIF Backbone Taxonomy     │
-                          │   (hosted DwC-A archive)     │
+                          │   GBIF Backbone Taxonomy    │
+                          │   (hosted DwC-A archive)    │
                           └───────────────┬─────────────┘
                                           │  download + parse
                                           ▼
@@ -245,37 +258,38 @@ reject the other three — an error we specifically avoid. In the GBIF Backbone 
 **75,315** names carry two or more accepted targets.
 
 ### 5.3 Graded tree-distance measures
-
+ 
 Exact and soft match are binary and cannot separate a near miss from a wild one. We
 therefore embed both prediction and truth in the taxonomic tree and measure their
 separation. Let $d(\cdot)$ be depth from the root and $\mathrm{LCA}(a,b)$ the lowest common
 ancestor of two nodes.
-
+ 
 **Mistake severity** — the number of ranks climbed from the truth to reach the shared
 ancestor with the prediction:
-
+ 
 $$
 \text{severity} \;=\; d(y) - d\!\big(\mathrm{LCA}(\hat{y}, y)\big), \qquad \text{lower is closer;}\ \ 0 \Rightarrow \text{correct}.
 $$
-
+ 
 **Wu–Palmer similarity** — normalized depth of the shared ancestor, in $[0,1]$:
-
+ 
 $$
-\text{wu\_palmer} \;=\; \frac{2\, d\!\big(\mathrm{LCA}(\hat{y}, y)\big)}{d(\hat{y}) + d(y)}.
+\mathrm{WuP} \;=\; \frac{2\, d\!\left(\mathrm{LCA}(\hat{y}, y)\right)}{d(\hat{y}) + d(y)}.
 $$
-
+ 
 **Lin similarity** — the information-theoretic analogue, weighting agreement by the rarity
 of the shared ancestor, so that agreeing on an obscure clade is worth more than agreeing on
 a ubiquitous one:
-
+ 
 $$
-\text{lin\_ic} \;=\; \frac{2\, \mathrm{IC}\!\big(\mathrm{LCA}(\hat{y}, y)\big)}{\mathrm{IC}(\hat{y}) + \mathrm{IC}(y)},
+\mathrm{Lin} \;=\; \frac{2\, \mathrm{IC}\!\left(\mathrm{LCA}(\hat{y}, y)\right)}{\mathrm{IC}(\hat{y}) + \mathrm{IC}(y)},
 \qquad
-\mathrm{IC}(c) \;=\; -\log \frac{\lvert \operatorname{subtree}(c)\rvert}{N},
+\mathrm{IC}(c) \;=\; -\log \frac{\lvert \mathrm{subtree}(c)\rvert}{N},
 $$
-
-where $N$ is the total node count and $\lvert \operatorname{subtree}(c)\rvert$ counts the
+ 
+where $N$ is the total node count and $\lvert \mathrm{subtree}(c)\rvert$ counts the
 descendants of clade $c$.
+
 
 ### 5.4 A worked example
 
@@ -483,7 +497,7 @@ single model population. Models resolve *what kind* of organism is present but n
 organism. This profile — not any single scalar — is the primary object of the benchmark.
 
 ### 7.3 Specificity and rarity compound
-
+ 
 The collapse is not driven by taxonomic depth alone; depth and rarity **compound**. Two
 mechanisms act together. As one descends the hierarchy, (i) the number of candidate classes
 grows by orders of magnitude — tens of phyla but hundreds of thousands of species — so the
@@ -491,13 +505,14 @@ grows by orders of magnitude — tens of phyla but hundreds of thousands of spec
 web-scale training text falls, so the evidence available for the correct answer thins. A
 species is thus simultaneously the hardest *discrimination* and the sparsest *signal*, and
 the two effects multiply rather than add.
-
+ 
 The information-content weighting of Lin similarity makes this concrete: agreeing with the
 truth at a rare, deep clade contributes more information — $\mathrm{IC}(c) = -\log
-(\lvert\operatorname{subtree}(c)\rvert / N)$ grows as the clade shrinks — yet it is exactly
+(\lvert\mathrm{subtree}(c)\rvert / N)$ grows as the clade shrinks — yet it is exactly
 these high-information agreements that models most often miss. The difficulty gradient the
 benchmark exposes is therefore a *joint* function of specificity and rarity, which is why it
 is so steep and so consistent across groups ([Section 8](#8-cross-group-generality)).
+
 
 ### 7.4 Recognition exceeds generation
 
@@ -586,24 +601,25 @@ groups reward different models — the within-component precursor to the cross-c
 dissociation that motivates BioVQA as a whole.
 
 ### 8.1 The rank-correlation construction
-
+ 
 For each organismal group $g$ we rank the twenty model configurations by exact match,
 producing a ranking vector $r_g$. For every pair of groups $(g, h)$ we compute the Spearman
 rank correlation
-
+ 
 $$
-\rho_{g,h} \;=\; \operatorname{Spearman}\big(r_g,\ r_h\big),
+\rho_{g,h} \;=\; \mathrm{Spearman}\!\left(r_g,\ r_h\right),
 $$
-
+ 
 and summarize the resulting $10 \times 10$ matrix by its **mean off-diagonal** value,
-
+ 
 $$
 \bar{\rho} \;=\; \frac{1}{|G|(|G|-1)} \sum_{g \neq h} \rho_{g,h}.
 $$
-
+ 
 A high $\bar{\rho}$ indicates that a *single* latent taxonomic ability governs performance:
 models that are strong on one clade are strong on all. A low $\bar{\rho}$ would indicate
 clade-specific competencies that do not transfer.
+
 
 ### 8.2 The correlation matrix
 
@@ -696,18 +712,41 @@ and per-difficulty breakdowns, the recognition–generation contrast, revision l
 scale, metric redundancy, and the cross-group correlation matrix of
 [Section 8](#8-cross-group-generality).
 
+
 ---
-
-## 11. Design references
-
-Our graded measures follow the standard ontology-similarity literature. Path-based
-similarity is that of **Wu and Palmer (1994)**, *Verb Semantics and Lexical Selection*, ACL.
-The information-content formulation is **Lin (1998)**, *An Information-Theoretic Definition of
-Similarity*, ICML, building on **Resnik (1995)**, *Using Information Content to Evaluate
-Semantic Similarity in a Taxonomy*, IJCAI. Nomenclatural resolution uses the **GBIF Backbone
-Taxonomy** (Global Biodiversity Information Facility). The specialist model and image
-distribution are **BioCLIP-2** and **TreeOfLife-200M** (Imageomics Institute), extending
-**BioCLIP** (Stevens *et al.*, *BioCLIP: A Vision Foundation Model for the Tree of Life*,
-CVPR 2024). The coarse-to-fine derivation of ranks from a single species prediction, and its
-consequence that errors at a parent rank depress accuracy at child ranks, follows the
-top-down constrained-inference protocol standard in hierarchical fine-grained classification.
+ 
+## 11. References
+ 
+Our graded tree-distance measures ([Section 5.3](#53-graded-tree-distance-measures)) follow
+the standard ontology-similarity literature [1–3]; nomenclatural resolution
+([Section 5.2](#52-soft-match-and-the-synonym-relation)) uses the GBIF Backbone Taxonomy [4];
+and the specialist baseline ([Section 6](#6-the-specialist-baseline-bioclip-2)) uses BioCLIP-2
+and TreeOfLife-200M [5, 6], extending BioCLIP [7]. The coarse-to-fine derivation of ranks from
+a single species prediction follows the top-down constrained-inference protocol standard in
+hierarchical fine-grained classification [8].
+ 
+[1] Z. Wu and M. Palmer. **Verb Semantics and Lexical Selection.** *Proceedings of the 32nd
+Annual Meeting of the Association for Computational Linguistics (ACL)*, pp. 133–138, 1994.
+ 
+[2] D. Lin. **An Information-Theoretic Definition of Similarity.** *Proceedings of the 15th
+International Conference on Machine Learning (ICML)*, pp. 296–304, 1998.
+ 
+[3] P. Resnik. **Using Information Content to Evaluate Semantic Similarity in a Taxonomy.**
+*Proceedings of the 14th International Joint Conference on Artificial Intelligence (IJCAI)*,
+pp. 448–453, 1995.
+ 
+[4] GBIF Secretariat. **GBIF Backbone Taxonomy.** Checklist dataset, Global Biodiversity
+Information Facility. https://doi.org/10.15468/39omei
+ 
+[5] J. Gu, X. Ma, S. Stevens, E. G. Campolongo, et al. **BioCLIP 2: Emergent Properties from
+Scaling Hierarchical Contrastive Learning.** *arXiv preprint arXiv:2505.23883*, 2025.
+ 
+[6] Imageomics Institute. **TreeOfLife-200M.** Dataset, 2025.
+https://huggingface.co/datasets/imageomics/TreeOfLife-200M
+ 
+[7] S. Stevens, J. Wu, M. J. Thompson, E. G. Campolongo, C. H. Song, D. E. Carlyn, et al.
+**BioCLIP: A Vision Foundation Model for the Tree of Life.** *Proceedings of the IEEE/CVF
+Conference on Computer Vision and Pattern Recognition (CVPR)*, pp. 19412–19424, 2024.
+ 
+[8] **Beyond Flat Labels: Level-Restricted Contrastive Learning for Hierarchical Fine-Grained
+Vision Classification.** *arXiv preprint*, 2026.
