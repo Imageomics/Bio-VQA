@@ -25,9 +25,7 @@
   - [3. Beetles &mdash; 2018-NEON-beetles](#3-beetles--2018-neon-beetles)
   - [4. Fish &mdash; DePondFi](#4-fish--depondfi)
   - [5. Zebra &mdash; GZCD](#5-zebra--gzcd)
-- [Corrections Applied to Upstream Annotations](#corrections-applied-to-upstream-annotations)
-  - [Correction A: Class-index transposition between camel and kiang in WAID](#correction-a-class-index-transposition-between-camel-and-kiang-in-waid)
-  - [Correction B: Centre-versus-corner coordinate convention in DePondFi](#correction-b-centre-versus-corner-coordinate-convention-in-depondfi)
+- [Correction Applied to Upstream Annotations](#correction-applied-to-upstream-annotations)
 - [Reproduction Procedure](#reproduction-procedure)
 - [Derived Subsets and Supported Question Classes](#derived-subsets-and-supported-question-classes)
 - [Dataset Statistics](#dataset-statistics)
@@ -94,7 +92,8 @@ upstream sources use four different annotation formats and at least three differ
 conventions. If one subset stores box corners in pixels and another stores box centres in normalised
 units, and both name the columns `x` and `y`, then any downstream code that treats them uniformly is
 silently wrong for one of them. Unifying these conventions is the single most consequential thing this
-layer does, and it is the subject of [Correction B](#correction-b-centre-versus-corner-coordinate-convention-in-depondfi).
+layer does, and the resulting conventions are tabulated in
+[Terminology and Coordinate Conventions](#terminology-and-coordinate-conventions).
 
 ---
 
@@ -141,7 +140,6 @@ Byte-identical copying makes this class of failure impossible.
 ```
 Datasets/
 ├── README.md                  # this document
-├── stats.py                   # statistics reporter (see: Dataset Statistics)
 │
 ├── Aerial/                    # WAID — six terrestrial species, drone imagery
 │   ├── download.py            # git clone of the upstream repository
@@ -204,9 +202,31 @@ $$
 x_{\min} = x_c \cdot W - \frac{w}{2}, \qquad y_{\min} = y_c \cdot H - \frac{h}{2}
 $$
 
-The subtraction of the half-extent is the entire content of
-[Correction B](#correction-b-centre-versus-corner-coordinate-convention-in-depondfi), and omitting
-it displaces every box down and to the right by half its own size.
+Omitting the subtraction of the half-extent displaces every box down and to the right by half its own
+size, so the two forms are not interchangeable despite both being four numbers.
+
+### Coordinate conventions across the released subsets
+
+The five sources use four different annotation formats, and the released subsets preserve that
+heterogeneity rather than forcing a single representation. The following table governs any code that
+touches box geometry:
+
+| Subset | Meaning of the position columns | Units | Column names |
+| :--- | :--- | :--- | :--- |
+| Aerial (six species) | **centre** | **normalised** $[0,1]$ | `x_center`, `y_center`, `width`, `height` |
+| Bees | top-left corner | absolute px | `x`, `y`, `w`, `h` |
+| Beetles (main) | *not boxes* &mdash; measurement endpoints | absolute px | `elytra_length_coords`, `elytra_width_coords` |
+| Beetles (`Detections/`) | corner pair | **normalised** $[0,1]$ | `coordinates` (JSON: `x_min`, `y_min`, `x_max`, `y_max`) |
+| Fish | top-left corner | absolute px | `bbox_x`, `bbox_y`, `bbox_w`, `bbox_h` |
+| Zebra | top-left corner | absolute px | `bbox x`, `bbox y`, `bbox w`, `bbox h` |
+
+Three of the six rows in that table differ from the others in either form or units. The Aerial subsets
+are normalised centre form, but their column names say so. The beetle detections are a normalised corner
+*pair* rather than corner-plus-extent. Everything else is absolute corner-plus-extent. **No consumer
+should assume a single convention across subsets**; the correct pattern is to dispatch on subset and
+convert to a common internal representation at load time.
+
+---
 
 **Intersection over Union.** For two boxes $A$ and $B$ in corner form, we measure overlap as:
 
@@ -272,7 +292,7 @@ coordinates remain valid if a consumer later resizes the imagery. This is a deli
 other four subsets and is documented again in the [schema table](#derived-subsets-and-supported-question-classes).
 
 It also applies the label correction described in
-[Correction A](#correction-a-class-index-transposition-between-camel-and-kiang-in-waid), and normalises the upstream
+[the correction section](#correction-applied-to-upstream-annotations), and normalises the upstream
 spelling *camelus* to *camel* so that the class vocabulary is consistent English common names.
 
 **`prepare.py`** performs selection. It proceeds in four stages:
@@ -418,14 +438,14 @@ on extension for ZIP and TAR variants.
 
 6. **Assign difficulty tiers** by object count $n$:
 
-   $$
+   ```math
    \text{tier}(n) = \begin{cases}
      \texttt{too\_easy} & n < 5 \\
      \texttt{easy}      & 5 \le n \le 20 \\
      \texttt{medium}    & 20 < n \le 60 \\
      \texttt{hard}      & n > 60
    \end{cases}
-   $$
+   ```
 
    Images in `too_easy` are not selected: fewer than five bees supports no interesting spatial question.
 
@@ -497,12 +517,6 @@ The repository ships three tables we use:
 | `BeetleMeasurements.csv` | one row per *measurement* | Pixel coordinate pairs and physical distances for each structure (`ElytraLength` or `ElytraWidth`), plus annotator identity and scalebar. |
 | `individual_specimens/metadata.csv` | one row per individual | Taxonomic identification for each cropped specimen. |
 | `group_images_resized/metadata.csv` | one row per group image | Site and species information for the photograph. |
-
-> **A note on repository identity.** The Imageomics organisation hosts two related beetle collections.
-> This pipeline uses **`imageomics/2018-NEON-beetles`**, the ethanol-preserved NEON specimens described
-> above. It does *not* use `imageomics/Hawaii-beetles`, which contains pinned specimens photographed at
-> three to five individuals per image &mdash; a density that cannot satisfy the minimum-count filter
-> applied here. The two are frequently confused because they are released together.
 
 We use this source as the **primary defensible dataset** for spatial reasoning. The lattice arrangement makes it uniquely well-suited to relative-position
 questions. Because specimens are laid out on an approximately regular grid against a plain background at
@@ -846,16 +860,17 @@ columns in absolute-pixel corner form.
 
 ---
 
-## Corrections Applied to Upstream Annotations
+## Correction Applied to Upstream Annotations
 
-Both corrections below alter ground truth relative to what the upstream sources supply. We document them
+The correction below alters ground truth relative to what the upstream source supplies. We document it
 prominently because a benchmark that silently modifies its inputs is not reproducible, and because
-anyone comparing our subsets against the original archives will otherwise find discrepancies and have no
-way to determine whether they are deliberate.
+anyone comparing our subsets against the original archive will otherwise find a discrepancy and have no
+way to determine whether it is deliberate. It is the only such alteration in this directory; the other
+four sources are consumed as published.
 
 ---
 
-### Correction A: Class-index transposition between camel and kiang in WAID
+### Class-index transposition between camel and kiang in WAID
 
 #### Observation
 
@@ -864,6 +879,19 @@ resolve to the animals actually depicted. Images whose annotations carry index `
 (*Equus kiang*, the Tibetan wild ass), and images whose annotations carry index `4` show **camels**.
 Resolving these indices through `classes.txt` in the ordinary way assigns them the opposite labels. The
 two classes are exchanged relative to the declared class list.
+
+#### Declared class ordering
+
+The upstream class list orders the six classes as sheep, cattle, seal, camelus, kiang, zebra, placing
+camel at index `3` and kiang at index `4`. This ordering is corroborated by the WAID publication, which
+enumerates the dataset's species in the same sequence, and by third-party mirrors of the archive whose
+class strings preserve it. The annotations we observe carry the opposite assignment for these two
+indices.
+
+We record that this determination rests on inspection of the imagery against the label files. We are not
+aware of an upstream erratum, and the discrepancy has not been confirmed by the dataset's authors. The
+correction below should therefore be read as an empirical finding about the archive as distributed at the
+commit we pin, not as a documented defect.
 
 #### Basis for the determination
 
@@ -904,7 +932,7 @@ All other indices resolve through `classes.txt` unchanged. A separate normalisat
 spelling `camelus` to `camel` wherever it appears, so that the released class vocabulary uses consistent
 English common names.
 
-The correction is applied **at the earliest possible point** &mdash; during metadata construction, before
+The relabelling is applied **at the earliest possible point** &mdash; during metadata construction, before
 any selection &mdash; so that every downstream stage sees only corrected labels and no stage has to know
 that a correction happened.
 
@@ -934,83 +962,6 @@ grep -l "^4 " <RAW_ROOT>/WAID/WAID/labels/train/*.txt | head -5
 
 If the images retrieved by the first command show camels rather than kiang, the upstream data has been
 revised and the override in `preprocess.py` must be removed.
-
----
-
-### Correction B: Centre-versus-corner coordinate convention in DePondFi
-
-#### Observation
-
-YOLO label files store box geometry in **normalised centre form**. An earlier version of the fish
-pipeline multiplied the normalised centre coordinates by the image dimensions and wrote the results into
-columns named `bbox_x` and `bbox_y` &mdash; names which, everywhere else in this directory and in the
-Pascal VOC and Wildbook conventions the other subsets follow, denote the **top-left corner**.
-
-The values were therefore correct as centres and wrong as corners, and any consumer rendering a box as
-`rectangle(x, y, x + w, y + h)` displaced it by half its own extent in both axes.
-
-#### Magnitude of the displacement
-
-The displacement is exactly:
-
-$$
-\Delta x = \frac{w}{2}, \qquad \Delta y = \frac{h}{2}
-$$
-
-This is a **shape-dependent, not constant, offset**: larger fish are displaced further than smaller ones.
-That property is what made the defect survive casual inspection. A constant offset looks like a
-calibration problem and gets caught immediately; an offset proportional to object size looks like boxes
-that are *slightly loose* on small objects and *badly placed* on large ones, which reads as ordinary
-detector noise.
-
-A worked example on a 640&times;480 frame makes the size concrete. Consider a fish annotated as
-$(x_c, y_c, w_n, h_n) = (0.5,\, 0.5,\, 0.5,\, 0.5)$ &mdash; centred, occupying half the frame in each
-dimension:
-
-| Quantity | Value |
-| :--- | :--- |
-| Absolute extent | $w = 320$, $h = 240$ |
-| Correct top-left corner | $(160,\; 120)$ |
-| Value written by the earlier pipeline | $(320,\; 240)$ |
-| Displacement | $(160,\; 120)$ px, i.e. exactly $(w/2,\; h/2)$ |
-
-#### Consequences for evaluation
-
-Spatial reasoning questions are evaluated against these coordinates. A question of the form *"is the
-leftmost fish above or below the midline?"* is scored by comparing the ground-truth box position to the
-model's answer. If the ground truth places every box down-and-right of the animal it describes, then
-some fraction of the ground-truth answers are wrong, and the measured accuracy on this subset is not
-measuring the model.
-
-#### Correction applied
-
-The conversion is isolated in a single function, `to_corner_box`, which performs the half-extent
-subtraction and then clamps the result into the frame. Because the conversion happens in exactly one
-place, the convention for the whole subset can be verified by reading nine lines of code.
-
-We verify the fix numerically rather than by inspection. On the worked example above, the function returns
-$(160, 120, 320, 240)$; on a small box near the origin, $(0.1, 0.1, 0.05, 0.05)$ returns
-$(48, 36, 32, 24)$; and a box overhanging the frame edge is clamped so that
-$x_{\min} + w \le W$ and $y_{\min} + h \le H$ hold.
-
-#### Coordinate conventions across all subsets
-
-The following table governs any code that touches box geometry:
-
-| Subset | Meaning of the position columns | Units | Column names |
-| :--- | :--- | :--- | :--- |
-| Aerial (six species) | **centre** | **normalised** $[0,1]$ | `x_center`, `y_center`, `width`, `height` |
-| Bees | top-left corner | absolute px | `x`, `y`, `w`, `h` |
-| Beetles (main) | *not boxes* &mdash; measurement endpoints | absolute px | `elytra_length_coords`, `elytra_width_coords` |
-| Beetles (`Detections/`) | corner pair | **normalised** $[0,1]$ | `coordinates` (JSON: `x_min`, `y_min`, `x_max`, `y_max`) |
-| Fish | top-left corner | absolute px | `bbox_x`, `bbox_y`, `bbox_w`, `bbox_h` |
-| Zebra | top-left corner | absolute px | `bbox x`, `bbox y`, `bbox w`, `bbox h` |
-
-Three of the six rows in that table differ from the others in either form or units. The Aerial subsets
-are normalised centre form, but their column names say so. The beetle detections are a normalised corner
-*pair* rather than corner-plus-extent. Everything else is absolute corner-plus-extent. **No consumer
-should assume a single convention across subsets**; the correct pattern is to dispatch on subset and
-convert to a common internal representation at load time.
 
 ---
 
@@ -1052,9 +1003,6 @@ python Zebra/download.py --output_dir <RAW_ROOT>/gzcd
 python Zebra/preprocess.py \
   --csv_path <RAW_ROOT>/gzcd/annotations.csv --image_dir <RAW_ROOT>/gzcd/images \
   --output_dir <SUBSET_ROOT>/Zebra-500 --top_k 500
-
-# ---------- 6. Verify ----------
-python stats.py --root <SUBSET_ROOT>
 ```
 
 Dependencies across all pipelines: `pandas`, `pillow`, `requests`, `tqdm`, `huggingface_hub`,
@@ -1082,9 +1030,7 @@ imaging modalities, three viewpoints, and object counts from two to several hund
 
 > **Two zebra subsets.** `Zebra-500` is the WAID aerial subset (plains zebra viewed from a drone) and
 > `GrevysZebra` is the GZCD ground-level subset (Grévy's zebra in right profile). They are entirely
-> different data at different viewpoints and must not be pooled. Directory names carry the `-500` suffix
-> inconsistently for historical reasons; every subset contains exactly 500 images regardless of whether
-> its name says so.
+> different data at different viewpoints.
 
 ### Question classes supported by each subset
 
@@ -1137,40 +1083,6 @@ reasoning rather than of, say, aerial imagery.
 
 ## Dataset Statistics
 
-We compute all reported statistics with `stats.py`, which walks a root directory, finds every subdirectory
-containing a `metadata.csv`, detects which of the five upstream schemas it follows, and prints Markdown
-tables ready to paste into this section.
-
-```bash
-python stats.py --root <SUBSET_ROOT>            # tables only
-python stats.py --root <SUBSET_ROOT> --check    # tables plus integrity checks
-```
-
-The script derives every per-image count by **grouping the released annotation rows**, never by reading
-a count column. This is deliberate: the count columns record what the pipeline believed at selection
-time, whereas the row count records what was actually released, and the purpose of the report is to
-describe the released artefact.
-
-### Integrity checks
-
-Five invariants, each addressing a specific failure mode:
-
-| Invariant | Failure it catches |
-| :--- | :--- |
-| Recorded count equals released row count | Malformed annotation lines counted at selection but dropped at parse, inflating the counting ground truth. |
-| Every referenced image exists in `Images/` | Metadata written for images whose copy failed. |
-| Every image file has metadata rows | Images copied before a later filter removed their annotations &mdash; the Zebra census-region ordering issue. |
-| No box has non-positive width or height | Degenerate annotations that break area computations and render as invisible. |
-| Coordinates lie in range for their declared form | Negative corners, which are the signature of centre-form values written into corner-form columns. |
-
-The last check is the automated form of [Correction B](#correction-b-centre-versus-corner-coordinate-convention-in-depondfi). Any subset
-that reintroduces the centre/corner confusion produces negative corner coordinates for boxes near the
-frame edge, and the check reports it.
-
-### Reported statistics
-
-<!-- Regenerate with: python stats.py --root <SUBSET_ROOT> --check -->
-
 | Subset | Source family | Images | Annotations | Min | Median | Mean | Max | Coordinate form |
 | :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | :--- |
 | `Camel-500` | Aerial | 500 | 3,825 | 1 | 6 | 7.7 | 28 | normalised centre |
@@ -1210,44 +1122,6 @@ difficulty tiers deliberately combined within one subset.
 `GrevysZebra` is the sparsest subset by median but reaches 44 annotations in one image, giving it the
 largest dynamic range relative to its median of any ground-level material.
 
-### Composition within subsets
-
-**`Bees`** partitions exactly as designed: 250 `easy`, 150 `medium`, 100 `hard`, matching the quota
-schedule with no backfill required.
-
-**`GrevysZebra`** is **not single-species**, and this materially affects how its counting ground truth
-must be used. Annotations are distributed across at least ten `annot species` values:
-
-| `annot species` | Images containing it |
-| :--- | ---: |
-| `zebra_grevys` | 491 |
-| `zebra_plains` | 198 |
-| `ignore` | 138 |
-| `bird` | 100 |
-| `antelope` | 54 |
-| `impala` | 20 |
-| `goat` | 11 |
-| `gazelle` | 9 |
-| `giraffe_reticulated` | 8 |
-| `water_buffalo` | 8 |
-
-A naive row count over this subset therefore answers *how many annotated objects are in this image*, not
-*how many Grévy's zebra are in this image*. The 4,223 total annotations include birds, other ungulates,
-and 138 images carrying `ignore` regions, which mark areas excluded from the census rather than animals.
-Any counting question posed on this subset **must filter `annot species` to the target class** and must
-exclude `ignore` rows; any question asking for a total animal count must additionally decide whether
-non-target species are in scope. This is a property of the census protocol rather than a defect, but it
-is the single most consequential thing to know before consuming this subset.
-
-The aerial subsets are single-class by construction, since `prepare.py` selects per species and writes
-only the target class's annotations. `Fish` is single-species upstream.
-
-In these tables, *Images* is the number of distinct images with at least one released annotation,
-*Annotations* is the total number of released rows, and *Min* / *Median* / *Mean* / *Max* describe the
-distribution of per-image object counts.
-
----
-
 ## Limitations
 
 The following constrain how the resulting measurements should be read.
@@ -1264,16 +1138,9 @@ across five to twenty. The tiers control the *range* covered but not the *distri
 A selection that sampled uniformly inside each band would give a smoother difficulty gradient, and this
 is the most straightforward improvement available to the selection logic.
 
-**Two subsets share the name `Zebra-500`.** See the note in
-[Derived Subsets](#derived-subsets-and-supported-question-classes).
-
-**The Zebra census filter is applied after selection.** The consequence is described in that section:
-ranking counts annotations that are subsequently removed. Any consumer must recompute counts from the
-released rows.
-
 **The camel/kiang correction is version-specific.** It is valid against the upstream commit pinned at
 acquisition and will become harmful if that upstream data is revised. See
-[Correction A](#correction-a-class-index-transposition-between-camel-and-kiang-in-waid).
+[the correction section](#correction-applied-to-upstream-annotations).
 
 **Beetle localisation coverage is partial.** The count gate is a precision filter, and images that fail
 it carry no boxes. The subset of beetle images with boxes is therefore not a random sample of the subset
