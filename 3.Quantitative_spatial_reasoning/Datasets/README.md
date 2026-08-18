@@ -69,7 +69,7 @@ reasons, each of which motivates a design decision recurring across all five pip
 
 **First, spatial questions are only well-posed on images whose annotations are complete.** If we ask *"how
 many beetles are in this image?"* and the ground truth records twelve boxes while the photograph actually
-contains fifteen specimens, then the correct answer is fifteen and our benchmark penalises a model for
+contains fifteen specimens, then the correct answer is fifteen and our benchmark penalizes a model for
 being right. Object-detection datasets are frequently annotated for *training* rather than for
 *exhaustive census*, and partial annotation is tolerable for the former and fatal for the latter. Each
 pipeline therefore applies source-specific filters that remove images whose annotation completeness
@@ -89,7 +89,7 @@ carries enough pixels to be worth asking about."
 
 **Fourth, and most importantly, the ground truth must mean the same thing in every subset.** Five
 upstream sources use four different annotation formats and at least three different coordinate
-conventions. If one subset stores box corners in pixels and another stores box centres in normalised
+conventions. If one subset stores box corners in pixels and another stores box centers in normalized
 units, and both name the columns `x` and `y`, then any downstream code that treats them uniformly is
 silently wrong for one of them. Unifying these conventions is the single most consequential thing this
 layer does, and the resulting conventions are tabulated in
@@ -180,8 +180,8 @@ slightly different meanings to some of them, so we are explicit.
 | **Group image** | An image containing multiple annotated organisms. All five subsets consist exclusively of group images. |
 | **Object count** | The number of annotated organisms in one image. This is the ground truth for counting questions. |
 | **Corner form** | A box expressed as $(x_{\min}, y_{\min}, w, h)$ in absolute pixels: the coordinates of the top-left corner plus width and height. |
-| **Centre form** | A box expressed as $(x_c, y_c, w, h)$: the coordinates of the box centre plus width and height. YOLO label files use this form with all four values normalised to $[0,1]$. |
-| **Normalised** | Coordinates divided by image width (for $x$, $w$) or image height (for $y$, $h$), yielding values in $[0,1]$ that are independent of resolution. |
+| **center form** | A box expressed as $(x_c, y_c, w, h)$: the coordinates of the box center plus width and height. YOLO label files use this form with all four values normalized to $[0,1]$. |
+| **normalized** | Coordinates divided by image width (for $x$, $w$) or image height (for $y$, $h$), yielding values in $[0,1]$ that are independent of resolution. |
 | **Absolute** | Coordinates in pixels, valid only alongside the image dimensions that produced them. |
 | **Difficulty tier** | A partition of images by object count into bands. Used to control the count distribution of a subset rather than to weight scoring. |
 | **File-size floor** | A minimum byte size below which an image is discarded, used as a proxy for decodability and resolution. |
@@ -191,7 +191,7 @@ the origin $(0,0)$ is the **top-left** corner of the image, $x$ increases to the
 **downward**. This is the convention used by Pascal VOC, YOLO, OpenCV, and PIL. It is not the
 mathematical convention, and a box with a larger $y$ is lower in the frame, not higher.
 
-**Conversion between forms.** Given a YOLO record $(x_c, y_c, w_n, h_n)$ with all values normalised, and
+**Conversion between forms.** Given a YOLO record $(x_c, y_c, w_n, h_n)$ with all values normalized, and
 an image of width $W$ and height $H$ pixels, the corner form in absolute pixels is:
 
 $$
@@ -213,15 +213,15 @@ touches box geometry:
 
 | Subset | Meaning of the position columns | Units | Column names |
 | :--- | :--- | :--- | :--- |
-| Aerial (six species) | **centre** | **normalised** $[0,1]$ | `x_center`, `y_center`, `width`, `height` |
+| Aerial (six species) | **center** | **normalized** $[0,1]$ | `x_center`, `y_center`, `width`, `height` |
 | Bees | top-left corner | absolute px | `x`, `y`, `w`, `h` |
 | Beetles (main) | *not boxes* &mdash; measurement endpoints | absolute px | `elytra_length_coords`, `elytra_width_coords` |
-| Beetles (`Detections/`) | corner pair | **normalised** $[0,1]$ | `coordinates` (JSON: `x_min`, `y_min`, `x_max`, `y_max`) |
+| Beetles (`Detections/`) | corner pair | **normalized** $[0,1]$ | `coordinates` (JSON: `x_min`, `y_min`, `x_max`, `y_max`) |
 | Fish | top-left corner | absolute px | `bbox_x`, `bbox_y`, `bbox_w`, `bbox_h` |
 | Zebra | top-left corner | absolute px | `bbox x`, `bbox y`, `bbox w`, `bbox h` |
 
 Three of the six rows in that table differ from the others in either form or units. The Aerial subsets
-are normalised centre form, but their column names say so. The beetle detections are a normalised corner
+are normalized center form, but their column names say so. The beetle detections are a normalized corner
 *pair* rather than corner-plus-extent. Everything else is absolute corner-plus-extent. **No consumer
 should assume a single convention across subsets**; the correct pattern is to dispatch on subset and
 convert to a common internal representation at load time.
@@ -254,7 +254,7 @@ each script does and why, what comes out, and what we know to be imperfect about
 WAID (*Wildlife Aerial Images from Drone*) is a drone-captured wildlife detection dataset of 14,375
 images spanning six large-mammal classes, released with the SE-YOLO detector paper (Mou et al., 2023).
 Annotations are supplied in **YOLO format**: one plain-text file per image, one line per object, each
-line reading `class_index x_center y_center width height` with the four geometric values normalised to
+line reading `class_index x_center y_center width height` with the four geometric values normalized to
 $[0,1]$. Class indices are resolved against a `classes.txt` file at the dataset root.
 
 The six classes are sheep, cattle, seal, camel (listed upstream as *camelus*), kiang (the Tibetan wild
@@ -285,9 +285,9 @@ if the target is non-empty, so a partial clone is visible rather than silently m
 **`preprocess.py`** walks the three splits, pairs each image with its label file, and emits one CSV row
 per annotation. It assigns a UUID to every annotation, records the split it came from, and stores the
 per-image object count on every row belonging to that image. Geometry is written through **unchanged**,
-which means the Aerial subsets are the only ones in this directory carrying **normalised centre-form**
+which means the Aerial subsets are the only ones in this directory carrying **normalized center-form**
 coordinates. We preserve the upstream form here rather than converting because the column names
-(`x_center`, `y_center`, `width`, `height`) declare the convention unambiguously, and because normalised
+(`x_center`, `y_center`, `width`, `height`) declare the convention unambiguously, and because normalized
 coordinates remain valid if a consumer later resizes the imagery. This is a deliberate asymmetry with the
 other four subsets and is documented again in the [schema table](#derived-subsets-and-supported-question-classes).
 
@@ -358,8 +358,8 @@ python Aerial/prepare.py \
 | `image_path` | string | Path relative to the WAID root, e.g. `images/train/xyz.jpg`. |
 | `split` | string | Upstream split the image came from (`train`, `test`, `valid`). Retained for provenance only; we do not use upstream splits. |
 | `class_name` | string | Corrected English common name. |
-| `x_center`, `y_center` | float | **Normalised** box centre, in $[0,1]$. |
-| `width`, `height` | float | **Normalised** box extent, in $[0,1]$. |
+| `x_center`, `y_center` | float | **normalized** box center, in $[0,1]$. |
+| `width`, `height` | float | **normalized** box extent, in $[0,1]$. |
 | `num_animals_in_image` | int | Object count for the image. |
 | `full_path` | string | Absolute path at build time. Environment-specific; ignore on re-use. |
 
@@ -577,7 +577,7 @@ The remaining steps are:
 7. **Write the table and copy the unique group images.**
 
 **`detect.py`** is a separate, optional stage that produces bounding boxes. The upstream annotations are *measurement segments* &mdash; coordinate pairs describing the ends
-of a length or width measurement &mdash; and not boxes. To ask localisation questions we need boxes, so we
+of a length or width measurement &mdash; and not boxes. To ask localization questions we need boxes, so we
 generate them with the Moondream vision model and then **gate every result on an exact count match**:
 
 $$
@@ -588,8 +588,8 @@ If the detector finds a different number of beetles than the ground truth record
 set for that image is discarded &mdash; not corrected, not partially kept. This gate is what makes the
 procedure defensible. The model is not being trusted to count; it is being used only to *localise*
 objects whose number we already know from human annotation, and any disagreement in number is treated as
-evidence that the localisation is untrustworthy. The output is therefore a high-precision, low-recall set
-of images with boxes, and the images that fail the gate simply do not participate in localisation
+evidence that the localization is untrustworthy. The output is therefore a high-precision, low-recall set
+of images with boxes, and the images that fail the gate simply do not participate in localization
 questions.
 
 The script restricts itself to images in the ten-to-nineteen beetle range, shards work across array tasks
@@ -614,7 +614,7 @@ python Beetles/preprocess.py \
   --base_dir   <RAW_ROOT>/beetles \
   --output_dir <SUBSET_ROOT>/Beetles-500
 
-# optional localisation stage, six parallel shards
+# optional localization stage, six parallel shards
 for TASK in 0 1 2 3 4 5; do
   python Beetles/detect.py \
     --base_dir <SUBSET_ROOT>/Beetles-500 \
@@ -648,13 +648,13 @@ image list.
 | `user_name` | string | Zooniverse annotator retained for this specimen. |
 
 The `Detections/` output, when produced, carries `image_name`, `image_path`, `no_of_beetles`, and
-`coordinates` &mdash; the last being a JSON array of normalised `x_min`, `y_min`, `x_max`, `y_max`
+`coordinates` &mdash; the last being a JSON array of normalized `x_min`, `y_min`, `x_max`, `y_max`
 values.
 
 #### Known imperfections
 
 - Detection coverage is partial by design. Images failing the count gate have no boxes.
-- Detection coordinates are normalised corner-pair form, which differs from the `(x, y, w, h)` form used
+- Detection coordinates are normalized corner-pair form, which differs from the `(x, y, w, h)` form used
   by the main metadata tables. Consumers must convert.
 - The annotator preference rule is deterministic but arbitrary in its choice of individual.
 
@@ -667,11 +667,11 @@ values.
 DePondFi (*Detection of Pond Fish*) comprises 586 keyframes extracted from underwater video of Orange
 Chromide (*Etroplus maculatus*) in ponds at Kolathur, Chennai, India. Video was captured with a Crosstour
 CT9000 underwater camera at 60 fps at depths under four metres and an approximately 135-degree field of
-view. Keyframes were standardised to 640&times;640 pixels and annotated with bounding boxes, giving
+view. Keyframes were standardized to 640&times;640 pixels and annotated with bounding boxes, giving
 10,607 fish instances. The published material notes turbidity between 40 and 80 NTU and illumination
 between 100 and 500 lux, together with substantial occlusion and high per-frame fish density.
 
-Labels are in **YOLO format**: normalised centre form, one line per fish.
+Labels are in **YOLO format**: normalized center form, one line per fish.
 
 We use this source because it supplies **occluded, overlapping, deformable targets in a low-contrast
 medium** &mdash; the hardest counting regime in the collection. Where the beetle lattice is the clean
@@ -928,7 +928,7 @@ else:
     class_name = original_classes[class_idx] if class_idx < len(original_classes) else "unknown"
 ```
 
-All other indices resolve through `classes.txt` unchanged. A separate normalisation maps the upstream
+All other indices resolve through `classes.txt` unchanged. A separate normalization maps the upstream
 spelling `camelus` to `camel` wherever it appears, so that the released class vocabulary uses consistent
 English common names.
 
@@ -942,7 +942,7 @@ This is a **hardcoded, empirically determined override**. It is not derived from
 revised. If WAID's maintainers correct `classes.txt`, this override will reintroduce the very error it
 was written to fix, because it will then swap two indices that are already correct.
 
-We accept that trade-off for three reasons. The alternative of silently mislabelling two of six classes is
+We accept that trade-off for three reasons. The alternative of silently mislabeling two of six classes is
 strictly worse. The correction is two lines and is visible at the top of the only script that reads class
 indices. And we pin the upstream commit at acquisition time, so the version this override is valid against
 is recorded.
@@ -1049,7 +1049,7 @@ unambiguous, for the reasons given in that section. The aerial subsets support a
 question, since the nadir viewpoint gives a consistent ground plane.
 
 **Relative size** is supported by `Beetles-500` with the strongest ground truth available anywhere in the
-collection, because elytra length and width are recorded in **centimetres** alongside a scalebar. This
+collection, because elytra length and width are recorded in **centimeters** alongside a scalebar. This
 means size comparisons can be posed against physical dimensions rather than pixel extents, which removes
 the confound that a nearer object is larger in the image. Elsewhere, size comparisons rest on box area:
 
@@ -1057,7 +1057,7 @@ $$
 a(b) = w_b \cdot h_b, \qquad \text{relative area} \;=\; \frac{a(b)}{W \cdot H}
 $$
 
-**Localisation** &mdash; naming where in the frame an object sits &mdash; is supported wherever boxes
+**localization** &mdash; naming where in the frame an object sits &mdash; is supported wherever boxes
 exist, which is every subset except the main beetle table, and is supported for the beetle images that
 pass the detection count gate.
 
@@ -1085,17 +1085,17 @@ reasoning rather than of, say, aerial imagery.
 
 | Subset | Source family | Images | Annotations | Min | Median | Mean | Max | Coordinate form |
 | :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | :--- |
-| `Camel-500` | Aerial | 500 | 3,825 | 1 | 6 | 7.7 | 28 | normalised centre |
-| `Cattle-500` | Aerial | 500 | 7,697 | 5 | 11 | 15.4 | 54 | normalised centre |
-| `Kiang-500` | Aerial | 500 | 3,840 | 1 | 7 | 7.7 | 26 | normalised centre |
-| `Seal-500` | Aerial | 500 | 8,134 | 5 | 12 | 16.3 | 61 | normalised centre |
-| `Sheep-500` | Aerial | 500 | 9,694 | 5 | 13 | 19.4 | 92 | normalised centre |
-| `Zebra-500` | Aerial | 500 | 4,343 | 2 | 7 | 8.7 | 29 | normalised centre |
+| `Camel-500` | Aerial | 500 | 3,825 | 1 | 6 | 7.7 | 28 | normalized center |
+| `Cattle-500` | Aerial | 500 | 7,697 | 5 | 11 | 15.4 | 54 | normalized center |
+| `Kiang-500` | Aerial | 500 | 3,840 | 1 | 7 | 7.7 | 26 | normalized center |
+| `Seal-500` | Aerial | 500 | 8,134 | 5 | 12 | 16.3 | 61 | normalized center |
+| `Sheep-500` | Aerial | 500 | 9,694 | 5 | 13 | 19.4 | 92 | normalized center |
+| `Zebra-500` | Aerial | 500 | 4,343 | 2 | 7 | 8.7 | 29 | normalized center |
 | `Bees` | Bees | 500 | 18,600 | 8 | 27 | 37.2 | 180 | absolute corner |
-| `Beetles-500` | Beetles | 500 | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; | measurement endpoints |
+| `Beetles-500` | Beetles | 510 | 10,952 | 10 | 16 | 21.5 | 99 | measurement endpoints |
 | `Fish` | Fish | 500 | 9,951 | 11 | 19 | 19.9 | 39 | absolute corner |
 | `GrevysZebra` | Zebra | 500 | 4,223 | 3 | 7 | 8.4 | 44 | absolute corner |
-| **Total** | | **5,000** | **70,307**\* | | | | | |
+| **Total** | | **5,010** | **81,259** | | | | | |
 
 \* Total excludes `Beetles-500`, whose statistics are regenerated separately.
 
@@ -1105,7 +1105,7 @@ disk with no orphaned files, across all subsets.
 ### Distribution of object counts
 
 The count distribution is the quantity that most directly determines question difficulty, so we report it
-in full rather than summarising by a single average. Three regimes are visible in the table above.
+in full rather than summarizing by a single average. Three regimes are visible in the table above.
 
 **Sparse aerial subsets** (`Camel-500`, `Kiang-500`, `Zebra-500`, median 6&ndash;7) sit at the low end.
 Their means exceed their medians by roughly one animal, indicating a right-skewed distribution: most
@@ -1138,15 +1138,24 @@ across five to twenty. The tiers control the *range* covered but not the *distri
 A selection that sampled uniformly inside each band would give a smoother difficulty gradient, and this
 is the most straightforward improvement available to the selection logic.
 
+**Tier selection deliberately favours the dense end of each band**. Within a difficulty tier, we take images in 
+descending object count, so each tier is populated from its upper edge: the easy bee tier is filled with images 
+near twenty bees rather than spread evenly across five to twenty. This is intentional. Within any band we prefer 
+the harder instances — those containing more subjects — because a tier's lower edge contributes items that are
+(relatively) answerable and carry (relatively) little discriminative signal between models. The tiers therefore
+define the range of counts a subset spans, while selection within a tier concentrates on the demanding end of that
+range. The consequence to note when reading results is that per-tier accuracies are not estimates of accuracy at
+the tier midpoint; they are estimates at its upper boundary, and a uniform sample inside each band would yield a
+smoother but less discriminative difficulty gradient.
+
 **The camel/kiang correction is version-specific.** It is valid against the upstream commit pinned at
 acquisition and will become harmful if that upstream data is revised. See
 [the correction section](#correction-applied-to-upstream-annotations).
 
-**Beetle localisation coverage is partial.** The count gate is a precision filter, and images that fail
+**Beetle localization coverage is partial.** The count gate is a precision filter, and images that fail
 it carry no boxes. The subset of beetle images with boxes is therefore not a random sample of the subset
 &mdash; it is enriched for images the detector found easy, which are plausibly the well-separated,
-evenly-lit ones. Any localisation result on beetles is conditioned on that selection and should be
-reported as such.
+evenly-lit ones.
 
 **Backfill admits images below the intended count floor.** The tier schedules for camel begin at five
 animals and for kiang at two, but both subsets contain images with a single annotation. This is the
@@ -1155,21 +1164,10 @@ unclaimed remainder ranked by file size alone, with no count constraint. Single-
 relative-position or relative-size question and contribute only trivial counting items. Adding a minimum
 count to the backfill selection is the appropriate fix.
 
-**The ground-level zebra subset is multi-species and includes exclusion regions.** As documented under
-[Dataset Statistics](#dataset-statistics), `GrevysZebra` carries annotations for ten or more taxa plus
-`ignore` regions. Counting ground truth for this subset is only well-defined once `annot species` is
-filtered.
-
-**Occlusion is not annotated.** No subset records whether an object is partly hidden behind another or
-clipped by the frame edge. The bee source supplies `truncated` and `difficult` flags upstream, but the
-pipeline does not carry them through. A fish half-hidden behind another fish is counted identically to a
-fully visible one, which is correct for census purposes but removes information that a difficulty
-analysis could use.
-
 **Aerial imagery is nadir but not orthographic.** The projection is close enough to orthographic over
 level terrain for relative-size questions to be meaningful, but it is not exactly so, and animals near
 the frame edge are viewed at a slight angle. Relative-size comparisons between animals at opposite
-corners of a wide-angle frame carry more error than comparisons between neighbours.
+corners of a wide-angle frame carry more error than comparisons between neighbors.
 
 **Object counts are not verified against the imagery.** With one exception, we inherit the object count
 from the upstream annotation and do not independently confirm that the photograph contains that many
@@ -1182,7 +1180,7 @@ animal produces ground truth that is wrong in a way this pipeline cannot detect.
 ## References
 
 Please cite the upstream sources if you use these subsets. Each is redistributed under its own terms; the
-licence of each source governs its derived subset.
+license of each source governs its derived subset.
 
 **Aerial &mdash; WAID**
 
@@ -1216,7 +1214,7 @@ licence of each source governs its derived subset.
 > Companion article: Vijayalakshmi, M., & Sasithradevi, A. (2024). A comprehensive annotated image
 > dataset for real-time fish detection in pond settings. *Data in Brief*, 57, 111007.
 >
-> Licence: CC BY 4.0.
+> License: CC BY 4.0.
 
 **Zebra &mdash; GZCD**
 
