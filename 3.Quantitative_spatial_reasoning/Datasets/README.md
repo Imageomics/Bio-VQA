@@ -1097,10 +1097,8 @@ reasoning rather than of, say, aerial imagery.
 | `GrevysZebra` | Zebra | 500 | 4,223 | 3 | 7 | 8.4 | 44 | absolute corner |
 | **Total** | | **5,010** | **81,259** | | | | | |
 
-\* Total excludes `Beetles-500`, whose statistics are regenerated separately.
-
 Every subset contains exactly 500 images, and every image referenced in a metadata table is present on
-disk with no orphaned files, across all subsets.
+disk across all subsets.
 
 ### Distribution of object counts
 
@@ -1138,7 +1136,7 @@ across five to twenty. The tiers control the *range* covered but not the *distri
 A selection that sampled uniformly inside each band would give a smoother difficulty gradient, and this
 is the most straightforward improvement available to the selection logic.
 
-**Tier selection deliberately favours the dense end of each band**. Within a difficulty tier, we take images in 
+**Tier selection deliberately favors the dense end of each band**. Within a difficulty tier, we take images in 
 descending object count, so each tier is populated from its upper edge: the easy bee tier is filled with images 
 near twenty bees rather than spread evenly across five to twenty. This is intentional. Within any band we prefer 
 the harder instances — those containing more subjects — because a tier's lower edge contributes items that are
@@ -1195,7 +1193,7 @@ license of each source governs its derived subset.
 > platform design specifications.* Dataset, 2021.
 >
 > Distributed by LILA BC: https://lila.science/datasets/boxes-on-bees-and-pollen
-> Licence: Community Data License Agreement (permissive variant).
+> License: Community Data License Agreement (permissive variant).
 
 **Beetles &mdash; 2018-NEON-beetles**
 
