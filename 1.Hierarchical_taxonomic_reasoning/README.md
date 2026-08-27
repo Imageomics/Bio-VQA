@@ -105,7 +105,7 @@ eight.
 ## The Eight Ranks
 
 ```
-   phylum ──▶ class ──▶ order ──▶ family ──▶ genus ──▶ species
+   phylum ──▶ class ──▶ order ──▶ family ──▶ genus ──▶ species epithet
                                                           │
                                                           ├──▶ scientific name
                                                           │
