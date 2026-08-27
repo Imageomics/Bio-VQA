@@ -417,13 +417,7 @@ Every graded metric is reported alongside the exact match it modifies.
 | GBIF Backbone | `gbif2024` | versioned snapshot; synonym map, accepted names |
 | iNaturalist | `inaturalist2024` | common-name resolution to English |
 | Wikidata | `wikidata` | common-name resolution to English |
- 
-### A note on anonymity
- 
-If this repository accompanies a double-blind submission, check the reference
-list for **self-citations** before publishing. Prior work by the same authors
-is identifying even when the repository itself carries no names, and it is the
-most common way an anonymised artifact is deanonymised.
+
  
 ---
 
