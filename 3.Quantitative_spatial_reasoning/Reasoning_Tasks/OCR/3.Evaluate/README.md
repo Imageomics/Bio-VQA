@@ -273,7 +273,7 @@ normalised, content is not
 ### 5.1 The modal-string predictor
 
 $$
-\hat{c}_j = \operatorname*{arg\,max}_{c} \; \bigl|\{ i : y_i[j] = c \}\bigr|,
+\hat{c}_j = \mathrm{arg\,max}_{c} \; \bigl|\{ i : y_i[j] = c \}\bigr|,
 \qquad
 \hat{y}_{\text{const}} = \hat{c}_0 \hat{c}_1 \cdots \hat{c}_{L_{\max}-1} ,
 $$

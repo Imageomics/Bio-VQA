@@ -256,9 +256,9 @@ For each measurement type the script fits two constants over a 1,500-point grid 
 observed range:
 
 $$
-c_t^{\text{relErr}} = \operatorname*{arg\,min}_{c} \; \frac{1}{n_t}\sum_{i \in t} \left|\frac{c}{y_i} - 1\right|,
+c_t^{\text{relErr}} = \mathrm{arg\,min}_{c} \; \frac{1}{n_t}\sum_{i \in t} \left|\frac{c}{y_i} - 1\right|,
 \qquad
-c_t^{\text{acc}} = \operatorname*{arg\,max}_{c} \; \frac{1}{n_t}\sum_{i \in t} \mathbb{1}\!\left[\left|\frac{c}{y_i} - 1\right| \le 0.20\right],
+c_t^{\text{acc}} = \mathrm{arg\,max}_{c} \; \frac{1}{n_t}\sum_{i \in t} \mathbb{1}\!\left[\left|\frac{c}{y_i} - 1\right| \le 0.20\right],
 $$
 
 and reports both together with the scores they achieve. Two properties of this construction

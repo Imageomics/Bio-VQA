@@ -137,7 +137,7 @@ def direction_of(c1, c2, margin_deg):
     """None if within margin_deg of an octant boundary."""
 ```
 
-$\theta = \operatorname{atan2}(y_r - y_b,\; x_r - x_b)$ in image coordinates ($y$ increasing
+$\theta = \mathrm{atan2}(y_r - y_b,\; x_r - x_b)$ in image coordinates ($y$ increasing
 downward), binned into eight 45&deg; octants.
 
 ### Three quality filters

@@ -167,7 +167,7 @@ is the metric against which the constant-predictor floor is fitted.
 ### 4.2 Error direction and magnitude
 
 $$
-\operatorname{bias} = \frac{1}{n}\sum_i \log\frac{\hat{y}_i}{y_i},
+\mathrm{bias} = \frac{1}{n}\sum_i \log\frac{\hat{y}_i}{y_i},
 \qquad
 \mathrm{logRMSE} = \sqrt{\frac{1}{n}\sum_i \left(\log\frac{\hat{y}_i}{y_i}\right)^{\!2}} .
 $$
@@ -184,7 +184,7 @@ two types' biases is the compression index
 The headline metric.
 
 $$
-\boxed{\;\rho_{\text{within}} \;=\; \frac{1}{|T|}\sum_{t \in T} \operatorname{Spearman}\!\left(\hat{y}_{|t},\; y_{|t}\right), \qquad T = \{\text{length}, \text{width}\}\;}
+\boxed{\;\rho_{\text{within}} \;=\; \frac{1}{|T|}\sum_{t \in T} \mathrm{Spearman}\!\left(\hat{y}_{|t},\; y_{|t}\right), \qquad T = \{\text{length}, \text{width}\}\;}
 $$
 
 Spearman is computed **inside each measurement type and then averaged**, never pooled.
@@ -245,9 +245,9 @@ For each measurement type $t$ we fit the constant that optimises the metric unde
 over the gold values on the **identical rows** the model was scored on:
 
 $$
-c_t^{\text{relErr}} = \operatorname*{arg\,min}_{c} \; \frac{1}{n_t}\sum_{i \in t} \left|\frac{c}{y_i} - 1\right|,
+c_t^{\text{relErr}} = \mathrm{arg\,min}_{c} \; \frac{1}{n_t}\sum_{i \in t} \left|\frac{c}{y_i} - 1\right|,
 \qquad
-c_t^{\text{acc}} = \operatorname*{arg\,max}_{c} \; \frac{1}{n_t}\sum_{i \in t} \mathbb{1}\!\left[\left|\frac{c}{y_i} - 1\right| \le 0.20\right],
+c_t^{\text{acc}} = \mathrm{arg\,max}_{c} \; \frac{1}{n_t}\sum_{i \in t} \mathbb{1}\!\left[\left|\frac{c}{y_i} - 1\right| \le 0.20\right],
 $$
 
 each by exhaustive search over a 1,500-point grid spanning the observed range.
@@ -281,13 +281,13 @@ into a normalised index.
 Define
 
 $$
-\text{compression} \;=\; \operatorname{bias}(\text{width}) - \operatorname{bias}(\text{length}) .
+\text{compression} \;=\; \mathrm{bias}(\text{width}) - \mathrm{bias}(\text{length}) .
 $$
 
 A model that measures correctly has no reason to be biased in opposite directions on two
 dimensions of the same specimen, so compression $\approx 0$. Now take a model answering a
 single remembered value $c$ regardless of which dimension is asked. Its per-type biases are
-$\operatorname{bias}(t) = \log c - \mathbb{E}[\log y_{|t}]$, so
+$\mathrm{bias}(t) = \log c - \mathbb{E}[\log y_{|t}]$, so
 
 $$
 \boxed{\;\text{compression}_{\text{single-anchor}} \;=\; \mathbb{E}[\log y_{|\text{length}}] - \mathbb{E}[\log y_{|\text{width}}] \;=\; \log \frac{\mathrm{GM}(\text{length})}{\mathrm{GM}(\text{width})}\;}
@@ -335,7 +335,7 @@ case the controls were designed to distinguish from the first two, and it occurs
 prediction by the exponentiated mean log ratio within its measurement type:
 
 $$
-\hat{y}_i^{\text{calib}} = \frac{\hat{y}_i}{\exp\!\left(\operatorname{bias}(t_i)\right)},
+\hat{y}_i^{\text{calib}} = \frac{\hat{y}_i}{\exp\!\left(\mathrm{bias}(t_i)\right)},
 \qquad
 \text{acc20}_{\text{calib}} = \sum_{t} \frac{n_t}{n} \cdot \frac{1}{n_t}\sum_{i \in t} \mathbb{1}\!\left[\frac{|\hat{y}_i^{\text{calib}} - y_i|}{y_i} \le 0.20\right].
 $$
@@ -443,13 +443,13 @@ and the vision budget is raised to near-native resolution so the segments are le
 Mean log-ratio bias by measurement type across all eighteen models:
 
 $$
-\overline{\operatorname{bias}}(\text{length}) = -0.178, \qquad \overline{\operatorname{bias}}(\text{width}) = +0.262,
+\overline{\mathrm{bias}}(\text{length}) = -0.178, \qquad \overline{\mathrm{bias}}(\text{width}) = +0.262,
 $$
 
 $$
 \text{compression} > 0 \;\text{ for }\; \textbf{17/18 models}; \quad
-\operatorname{bias}(\text{length}) < 0 \text{ for } 15/18; \quad
-\operatorname{bias}(\text{width}) > 0 \text{ for } 14/18 .
+\mathrm{bias}(\text{length}) < 0 \text{ for } 15/18; \quad
+\mathrm{bias}(\text{width}) > 0 \text{ for } 14/18 .
 $$
 
 Models systematically under-measure the larger dimension and over-measure the smaller one.
@@ -516,7 +516,7 @@ Two mechanisms compound and the data separate them. Width is roughly half of len
 physical extent, so it subtends fewer pixels and is the more acuity-limited measurement. And
 because width lies further below the central tendency of the pooled size distribution, a model
 anchored on a remembered size overshoots it more severely — the
-$\overline{\operatorname{bias}}(\text{width}) = +0.262$ reported above.
+$\overline{\mathrm{bias}}(\text{width}) = +0.262$ reported above.
 
 The extreme cases isolate the second mechanism cleanly. Phi-3.5-Vision posts relative error of
 1.436 and acc@20 of 0.060 on width against 0.463 and 0.336 on length; Qwen2.5-VL-3B posts
