@@ -37,7 +37,7 @@ requests>=2.31               # C1: pooled HTTP session for image download
 #
 #      Gemma-4                    transformers @ git HEAD
 #      Qwen3-VL (dense + MoE)     transformers >= current release
-#      all other 16 models        transformers == 4.57.1
+#      all other 16 models        transformers == 5.5.0
 #
 #  The pin below is the majority case and is what a single-model reproduction
 #  should start from. Do not assume it covers Gemma-4 or Qwen3-VL.
