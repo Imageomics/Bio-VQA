@@ -66,17 +66,26 @@ design decision here.
 | **Narrow coverage** — a few animal groups | **10 organismal groups**, including arachnids and bryophytes, absent from prior benchmarks |
 | **Narrow scope** — mostly taxonomic naming | **Four components**: taxonomy, attributes, spatial quantification, individual identity |
 | **Fixed scoring** — exact match penalises a near-miss like a total miss | **Graded metrics** throughout, each reported *alongside* the exact match it modifies |
-| **Missing baselines** — no floors, no ceilings | **Image-blind floors** on every definable task; **specialist ceilings** where one exists |
+| **Missing baselines** | **Image-blind floors** on every definable task; **specialist ceilings** where one exists |
 
 Comparison with the closest prior benchmarks:
 
-| Benchmark | Domain | Questions | Images | Groups | Taxon | Attr. | Spatial | Individual | Floor |
-| :--- | :--- | ---: | ---: | ---: | :---: | :---: | :---: | :---: | :---: |
-| VLM4Bio | biology | 469K | 30K | 3 | ✔ | ✔ | ✘ | ✘ | ✘ |
-| PlantExpertVQA | biology | 765K | 151K | 1 | ~ | ✔ | ✘ | ✘ | ✘ |
-| J-EDI QA | biology | 0.1K | 0.1K | 1 | ✔ | ✘ | ✘ | ✘ | ✘ |
-| AVA-Bench | general | 218K | 218K | — | ✘ | ✔ | ✔ | ✘ | ~ |
-| **Bio-VQA** | biology | **1.87M** | **216K** | **10** | ✔ | ✔ | ✔ | **✔** | **✔** |
+| Domain | Benchmark | Questions | Images | Groups | Taxon | Attr. | Spatial | Individual |
+|---|---|---:|---:|---:|:---:|:---:|:---:|:---:|
+| General | MMBench | 3.0K | 3.0K | — | ✘ | ~ | ~ | ✘ |
+| General | BLINK | 3.8K | 7.4K | — | ✘ | ~ | ✔ | ✘ |
+| General | CV-Bench | 2.6K | 2.6K | — | ✘ | ~ | ✔ | ✘ |
+| General | AVA-Bench | 218K | 218K | — | ✘ | ✔ | ✔ | ✘ |
+| Biology | J-EDI QA | 0.1K | 0.1K | 1 | ✔ | ✘ | ✘ | ✘ |
+| Biology | PlantExpertVQA | 765K | 151K | 1 | ~ | ✔ | ✘ | ✘ |
+| Biology | VLM4Bio | 469K | 30K | 3 | ✔ | ✔ | ✘ | ✘ |
+| Biology | **Bio-VQA (ours)** | **1.87M** | **216K** | **10** | ✔ | ✔ | ✔ | **✔** |
+
+Columns report the number of Questions, Images and organismal
+Groups; and whether the benchmark covers Taxonomic, Attributes,
+Spatial and Individual identity questions. ✔ means the question type is a
+primary task family, ~ that it appears incidentally or as a single task, and ✘ that it is
+absent. A dash means the count is not stated in the corresponding paper.
 
 ---
 
