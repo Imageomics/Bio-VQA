@@ -84,27 +84,30 @@ Comparison with the closest prior benchmarks:
 ## The Four Components
 
 ```
-                              ┌─────────────────────┐
-                              │      Bio-VQA        │
-                              │  1.87M questions    │
-                              │    216K images      │
-                              └──────────┬──────────┘
-              ┌──────────────┬───────────┼───────────┬──────────────┐
-              ▼              ▼           ▼           ▼              ▼
-        ┌──────────┐  ┌───────────┐ ┌─────────┐ ┌──────────┐
-        │    C1    │  │    C2     │ │   C3    │ │    C4    │
-        │ taxonomy │  │ attribute │ │ spatial │ │  re-id   │
-        │          │  │ grounding │ │reasoning│ │          │
-        ├──────────┤  ├───────────┤ ├─────────┤ ├──────────┤
-        │ 8 ranks  │  │ 4 question│ │ 7 tasks │ │ 3 diffi- │
-        │ 10 groups│  │ categories│ │ + 1 ctrl│ │ culty    │
-        │          │  │           │ │         │ │ levels   │
-        ├──────────┤  ├───────────┤ ├─────────┤ ├──────────┤
-        │ ceiling: │  │ ceiling:  │ │ floor:  │ │ ceiling: │
-        │BioCLIP-2 │  │ 3 human   │ │ image-  │ │  Mega-   │
-        │          │  │annotators │ │ blind   │ │Descriptor│
-        └──────────┘  └───────────┘ └─────────┘ └──────────┘
+                             ┌───────────────────────┐
+                             │        Bio-VQA        │
+                             │    1.87M questions    │
+                             │      216K images      │
+                             └───────────┬───────────┘
+                                         │
+           ┌───────────────────┬─────────┴─────────┬───────────────────┐
+           ▼                   ▼                   ▼                   ▼
+  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐
+  │       C1       │  │       C2       │  │       C3       │  │       C4       │
+  │    taxonomy    │  │   attribute    │  │    spatial     │  │   individual   │
+  │                │  │   grounding    │  │   reasoning    │  │     re-ID      │
+  ├────────────────┤  ├────────────────┤  ├────────────────┤  ├────────────────┤
+  │    8 ranks     │  │   4 question   │  │    7 tasks     │  │  3 difficulty  │
+  │   10 groups    │  │   categories   │  │  + 1 control   │  │     levels     │
+  ├────────────────┤  ├────────────────┤  ├────────────────┤  ├────────────────┤
+  │    ceiling:    │  │    ceiling:    │  │     floor:     │  │    ceiling:    │
+  │   BioCLIP-2    │  │  3 annotators  │  │  image-blind   │  │ MegaDescriptor │
+  └────────────────┘  └────────────────┘  └────────────────┘  └────────────────┘
+
 ```
+
+
+
 
 Each component directory carries a full README with its construction,
 metrics and results.
