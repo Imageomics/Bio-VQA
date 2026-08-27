@@ -327,7 +327,7 @@ ablation rather than a degenerate one.
 The winner is the option with the largest gold value:
 
 $$
-\text{answer} = \operatorname*{arg\,max}_{\ell \in \{A,B,C,D\}} v_\ell ,
+\text{answer} = \mathrm{arg\,max}_{\ell \in \{A,B,C,D\}} v_\ell ,
 $$
 
 uniquely defined because exact ties are rejected by the margin filter

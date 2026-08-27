@@ -136,7 +136,7 @@ collection label, a scale marker — so the detector can return multiple objects
 one with the greatest area:
 
 $$
-\text{box} = \operatorname*{arg\,max}_{b \in \text{objects}} \; (x_1^b - x_0^b)(y_1^b - y_0^b) .
+\text{box} = \mathrm{arg\,max}_{b \in \text{objects}} \; (x_1^b - x_0^b)(y_1^b - y_0^b) .
 $$
 
 Area is the right selection statistic here because the specimen barcode is the dominant

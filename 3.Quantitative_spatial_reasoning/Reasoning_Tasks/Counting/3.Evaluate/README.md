@@ -224,7 +224,7 @@ rather than answering randomly when uncertain
 ### 4.5 Rank correlation
 
 $$
-\rho = \frac{\operatorname{cov}\bigl(\mathrm{rank}(\hat{y}),\, \mathrm{rank}(y)\bigr)}{\sigma_{\mathrm{rank}(\hat{y})}\,\sigma_{\mathrm{rank}(y)}}
+\rho = \frac{\mathrm{cov}\bigl(\mathrm{rank}(\hat{y}),\, \mathrm{rank}(y)\bigr)}{\sigma_{\mathrm{rank}(\hat{y})}\,\sigma_{\mathrm{rank}(y)}}
 $$
 
 Implemented directly on pandas ranks to avoid a SciPy dependency, returning `NaN` when
@@ -257,7 +257,7 @@ whatever the other columns report ([Section 9.3](#93-rank-correlation-as-shortcu
 For every group we construct
 
 $$
-\hat{y}^{\text{modal}} = \operatorname*{arg\,max}_{v}\;\bigl|\{i : y_i = v\}\bigr|
+\hat{y}^{\text{modal}} = \mathrm{arg\,max}_{v}\;\bigl|\{i : y_i = v\}\bigr|
 $$
 
 and score it on the identical rows as the model:

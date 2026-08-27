@@ -298,7 +298,7 @@ The floor is not the common prefix. It is the **per-position modal character** o
 corpus:
 
 $$
-\hat{c}_j = \operatorname*{arg\,max}_{c} \; \bigl|\{ i : y_i[j] = c \}\bigr|,
+\hat{c}_j = \mathrm{arg\,max}_{c} \; \bigl|\{ i : y_i[j] = c \}\bigr|,
 \qquad
 \hat{y}_{\text{const}} = \hat{c}_0 \hat{c}_1 \cdots \hat{c}_{11} ,
 $$

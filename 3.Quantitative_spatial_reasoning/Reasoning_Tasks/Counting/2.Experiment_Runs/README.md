@@ -268,7 +268,7 @@ means the generated tiers and the datasets root disagree.
 scores by always answering that group's modal count,
 
 $$
-\hat{y}_{\text{modal}} = \operatorname*{arg\,max}_{v} \; \bigl|\{\, i : y_i = v \,\}\bigr| ,
+\hat{y}_{\text{modal}} = \mathrm{arg\,max}_{v} \; \bigl|\{\, i : y_i = v \,\}\bigr| ,
 $$
 
 $$

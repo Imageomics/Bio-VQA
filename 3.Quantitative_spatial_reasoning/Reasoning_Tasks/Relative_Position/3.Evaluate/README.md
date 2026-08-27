@@ -206,7 +206,7 @@ And **`errOther` sits at 0.37&ndash;0.52 for every model including the best.** S
 not confusing boxes and not guessing &mdash; they see the layout and miss the exact octant.
 
 $$
-\operatorname{corr}(\text{acc},\, \text{within45}) = +0.988
+\mathrm{corr}(\text{acc},\, \text{within45}) = +0.988
 $$
 
 > This is a substantially more interesting claim than "models are bad at relative position." It says the
@@ -249,7 +249,7 @@ behaviours**.
 correction's built-in sanity check.
 
 $$
-\operatorname{corr}(\text{acc},\, \text{predTopShare}) = -0.692
+\mathrm{corr}(\text{acc},\, \text{predTopShare}) = -0.692
 $$
 
 Those should be **flagged rather than ranked**.

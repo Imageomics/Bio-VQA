@@ -319,9 +319,9 @@ optimises the metric under comparison, over the gold values on the **identical r
 model was scored on:
 
 $$
-c_t^{\text{relErr}} = \operatorname*{arg\,min}_{c} \; \frac{1}{n_t}\sum_{i \in t} \left|\frac{c}{y_i} - 1\right|,
+c_t^{\text{relErr}} = \mathrm{arg\,min}_{c} \; \frac{1}{n_t}\sum_{i \in t} \left|\frac{c}{y_i} - 1\right|,
 \qquad
-c_t^{\text{acc}} = \operatorname*{arg\,max}_{c} \; \frac{1}{n_t}\sum_{i \in t} \mathbb{1}\!\left[\left|\frac{c}{y_i} - 1\right| \le 0.20\right].
+c_t^{\text{acc}} = \mathrm{arg\,max}_{c} \; \frac{1}{n_t}\sum_{i \in t} \mathbb{1}\!\left[\left|\frac{c}{y_i} - 1\right| \le 0.20\right].
 $$
 
 Two design points are load-bearing.
@@ -350,7 +350,7 @@ between-type separation, with zero within-type signal.
 We therefore compute rank correlation **inside each measurement type and then average**:
 
 $$
-\rho_{\text{within}} \;=\; \frac{1}{|T|}\sum_{t \in T} \operatorname{Spearman}\!\left(\hat{y}_{|t},\; y_{|t}\right).
+\rho_{\text{within}} \;=\; \frac{1}{|T|}\sum_{t \in T} \mathrm{Spearman}\!\left(\hat{y}_{|t},\; y_{|t}\right).
 $$
 
 Any predictor constant within a type scores exactly zero here. We report `rho_pooled`
@@ -367,15 +367,15 @@ Define the compression index as the difference in log-ratio bias between the two
 types:
 
 $$
-\text{compression} \;=\; \operatorname{bias}(\text{width}) - \operatorname{bias}(\text{length}),
+\text{compression} \;=\; \mathrm{bias}(\text{width}) - \mathrm{bias}(\text{length}),
 \qquad
-\operatorname{bias}(t) = \frac{1}{n_t}\sum_{i \in t} \log\frac{\hat{y}_i}{y_i}.
+\mathrm{bias}(t) = \frac{1}{n_t}\sum_{i \in t} \log\frac{\hat{y}_i}{y_i}.
 $$
 
 **A model that measures correctly has no reason to be biased in opposite directions on the
 two dimensions**, so compression $\approx 0$. Now consider a model that answers a single
 remembered value $c$ regardless of which dimension is asked. Its biases are
-$\operatorname{bias}(t) = \log c - \mathbb{E}[\log y_{|t}]$, so
+$\mathrm{bias}(t) = \log c - \mathbb{E}[\log y_{|t}]$, so
 
 $$
 \boxed{\;\text{compression}_{\text{single-anchor}} \;=\; \mathbb{E}[\log y_{|\text{length}}] - \mathbb{E}[\log y_{|\text{width}}] \;=\; \log \frac{\mathrm{GM}(\text{length})}{\mathrm{GM}(\text{width})}\;}
@@ -474,14 +474,14 @@ the models must clear.
 Mean log-ratio bias by measurement type, across all eighteen models:
 
 $$
-\overline{\operatorname{bias}}(\text{length}) = -0.178, \qquad
-\overline{\operatorname{bias}}(\text{width}) = +0.262 .
+\overline{\mathrm{bias}}(\text{length}) = -0.178, \qquad
+\overline{\mathrm{bias}}(\text{width}) = +0.262 .
 $$
 
 $$
 \text{compression} > 0 \;\text{ for }\; \textbf{17/18 models}; \quad
-\operatorname{bias}(\text{length}) < 0 \;\text{ for } 15/18; \quad
-\operatorname{bias}(\text{width}) > 0 \;\text{ for } 14/18 .
+\mathrm{bias}(\text{length}) < 0 \;\text{ for } 15/18; \quad
+\mathrm{bias}(\text{width}) > 0 \;\text{ for } 14/18 .
 $$
 
 Models systematically under-measure the larger dimension and over-measure the smaller one.
@@ -514,7 +514,7 @@ model.
 ### 6.4 Ranking and calibration dissociate
 
 `acc20_calib` rescores each model after removing its own per-type bias — dividing every
-prediction by $\exp(\operatorname{bias}(t))$ within each measurement type. Because the
+prediction by $\exp(\mathrm{bias}(t))$ within each measurement type. Because the
 correction is fitted on the rows it is applied to, it is an optimistic ceiling and a
 **diagnostic, not a score**: it reports how well a model would do if it were told the correct
 scale factor.
@@ -560,7 +560,7 @@ Two mechanisms compound, and they are separable in the data. Width is roughly ha
 in physical extent, so it subtends fewer pixels and is the more acuity-limited measurement.
 And because width lies further below the central tendency of the pooled size distribution, a
 model anchored on a remembered size overshoots it more severely — which is exactly the
-$\operatorname{bias}(\text{width}) = +0.262$ reported above.
+$\mathrm{bias}(\text{width}) = +0.262$ reported above.
 
 The extreme cases isolate the second mechanism. Phi-3.5-Vision posts relative error of 1.436
 and acc@20 of 0.060 on width against 0.463 and 0.336 on length; Qwen2.5-VL-3B posts 1.419 and

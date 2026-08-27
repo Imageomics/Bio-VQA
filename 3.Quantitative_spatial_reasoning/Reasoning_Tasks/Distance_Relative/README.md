@@ -256,7 +256,7 @@ $$
 with $\lambda$ identical across all four. Therefore
 
 $$
-\operatorname*{arg\,max}_i \, L_i^{\text{px}} \;=\; \operatorname*{arg\,max}_i \, \ell_i
+\mathrm{arg\,max}_i \, L_i^{\text{px}} \;=\; \mathrm{arg\,max}_i \, \ell_i
 \qquad \text{exactly, for any } \lambda > 0 .
 $$
 

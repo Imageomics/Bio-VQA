@@ -52,9 +52,9 @@ can separate them.
 A model's whole set of replies can, and the signal is *where the boxes sit*:
 
 $$
-c_x = \operatorname{median}_i \frac{\hat{x}_i + \hat{w}_i/2}{W_i},
+c_x = \mathrm{median}_i \frac{\hat{x}_i + \hat{w}_i/2}{W_i},
 \qquad
-c_y = \operatorname{median}_i \frac{\hat{y}_i + \hat{h}_i/2}{H_i}
+c_y = \mathrm{median}_i \frac{\hat{y}_i + \hat{h}_i/2}{H_i}
 $$
 
 $$

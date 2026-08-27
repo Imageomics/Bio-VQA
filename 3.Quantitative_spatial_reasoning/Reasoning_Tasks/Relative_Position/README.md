@@ -58,7 +58,7 @@ Given two box centres $c_r$ (red target) and $c_b$ (blue target) in image coordi
 increasing downward:
 
 $$
-\theta \;=\; \operatorname{atan2}\bigl(y_r - y_b,\; x_r - x_b\bigr)
+\theta \;=\; \mathrm{atan2}\bigl(y_r - y_b,\; x_r - x_b\bigr)
 $$
 
 $\theta$ is binned into eight 45&deg; octants:
