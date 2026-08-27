@@ -662,5 +662,5 @@ resolved names.
 ---
 
 <p align="center">
-  <sub>Part of the <b>Bio-VQA</b> benchmark &middot; Imageomics Institute</sub>
+  <sub>Part of the <b>Bio-VQA</b> benchmark</sub>
 </p>

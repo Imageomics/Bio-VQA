@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 """
-Stitch chunked Viewpoint results into one CSV per model. Merging only - all
-scoring lives in evaluate.py, so the numbers in the paper come from exactly
-one place.
+Stitch chunked Localization results into one CSV per model. Merging only - all
+scoring lives in evaluate.py, so the numbers in the paper come from one place.
 
-  # merged CSVs beside the task data, not beside this script:
-  python merge_results.py \
-      --out_dir /fs/ess/PAS2136/Rayeed/Bio-VQA/1-Spatial-Visual-Reasoning-tasks/Viewpoint/results
-
-  python merge_results.py --run_dir /path/to/2.Viewpoint --out_dir /path/to/anywhere
+  python merge_results.py --out_dir /path/to/task/results
+  python merge_results.py --run_dir /path/to/runs --out_dir /path/to/results
   python merge_results.py --model gemma3_12B
 
 Reads  <run_dir>/chunks/chunk*/qa_<MODEL_KEY>.csv
@@ -39,16 +35,14 @@ import pandas as pd
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run_dir", default=here,
-                    help="directory holding chunks/ (default: this script's)")
-    ap.add_argument("--out_dir", default="",
-                    help="where merged CSVs go (default: <run_dir>/results)")
+    ap.add_argument("--run_dir", default=here)
+    ap.add_argument("--out_dir", default="")
     ap.add_argument("--model", default="", help="MODEL_KEY substring filter")
     args = ap.parse_args()
 
     chunk_root = os.path.join(args.run_dir, "chunks")
-    out_root = args.out_dir or os.path.join(args.run_dir, "results")
-    out_root = os.path.abspath(out_root)
+    out_root = os.path.abspath(args.out_dir or
+                               os.path.join(args.run_dir, "results"))
     os.makedirs(out_root, exist_ok=True)
 
     chunk_dirs = sorted(glob.glob(os.path.join(chunk_root, "chunk*")))
@@ -74,7 +68,7 @@ def main():
 
     manifest = {"generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                                time.gmtime()),
-                "task": "viewpoint",
+                "task": "localization",
                 "chunk_root": os.path.abspath(chunk_root),
                 "out_dir": out_root,
                 "chunks": len(chunk_dirs), "expected_rows": n_expected,
@@ -99,14 +93,13 @@ def main():
         df.to_csv(out, index=False)
 
         col = key + "_answer"
-        parsed = (int(df[col].notna().sum())
-                  if col in df.columns else 0)
+        parsed = int(df[col].notna().sum()) if col in df.columns else 0
         complete = (len(df) == n_expected and not missing and dupes == 0)
 
         manifest["models"][key] = {
             "rows": int(len(df)), "chunks_found": len(parts),
             "chunks_missing": missing, "duplicate_row_ids": dupes,
-            "resolved_labels": parsed, "complete": bool(complete),
+            "resolved_answers": parsed, "complete": bool(complete),
             "out_csv": out,
         }
 

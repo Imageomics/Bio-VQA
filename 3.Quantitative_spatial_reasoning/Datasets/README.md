@@ -1224,5 +1224,5 @@ license of each source governs its derived subset.
 ---
 
 <p align="center">
-  <sub>Part of the <b>Bio-VQA</b> benchmark · Imageomics Institute</sub>
+  <sub>Part of the <b>Bio-VQA</b> benchmark</sub>
 </p>

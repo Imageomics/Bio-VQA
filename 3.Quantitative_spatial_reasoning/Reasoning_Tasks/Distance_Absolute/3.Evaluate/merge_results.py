@@ -5,9 +5,6 @@ scoring lives in evaluate.py, so the numbers in the paper come from exactly
 one place.
 
   # merged CSVs beside the task data, not beside this script:
-  python merge_results.py \
-      --out_dir /fs/ess/PAS2136/Rayeed/Bio-VQA/1-Spatial-Visual-Reasoning-tasks/Absolute Distance Measurements/results
-
   python merge_results.py --run_dir /path/to/3.Morphometry --out_dir /path/to/anywhere
   python merge_results.py --model gemma3_12B
 

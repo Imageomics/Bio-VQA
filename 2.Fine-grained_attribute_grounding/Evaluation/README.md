@@ -778,6 +778,6 @@ CAGS is validated against human judgment by a **blind, stratified manual-review 
 ---
 
 <p align="center">
-  <sub>Part of the <b>BioVQA</b> benchmark · Axis (ii) — Fine-Grained Visual Attribute Grounding · Imageomics Institute</sub><br>
+  <sub>Part of the <b>Bio-VQA</b> benchmark</sub><br>
   <sub>All leaderboard/matrix values reproduced from <code>Results/</code>; all kernel example values computed by <code>evaluate_soft.py</code> under the default configuration.</sub>
 </p>

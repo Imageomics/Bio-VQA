@@ -440,7 +440,7 @@ Because temporary frame files are chunk-scoped, array tasks may share a working 
 
  
 <p align="center">
-  <sub>Part of the <b>Bio-VQA</b> benchmark · Imageomics Institute</sub>
+  <sub>Part of the <b>Bio-VQA</b> benchmark</sub>
 </p>
  
 

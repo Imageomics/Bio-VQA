@@ -380,9 +380,8 @@ def run_task(handle, task_dir, batch_size, overwrite, limit, io_workers=4):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_root", type=str,
-                        default="/fs/ess/PAS2136/Rayeed/Bio-VQA/"
-                                "4-Instance-Level-Identification")
+    parser.add_argument("--data_root", type=str, required=True,
+                        help="root of the 4-Instance-Level-Identification dataset")
     parser.add_argument("--difficulties", nargs="+", default=DIFFICULTIES,
                         choices=DIFFICULTIES)
     parser.add_argument("--num", type=int, default=500,

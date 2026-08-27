@@ -465,5 +465,5 @@ Llama-3.2 passes through the cleaner first.
 ---
 
 <p align="center">
-  <sub>Part of the <b>Bio-VQA</b> benchmark · Imageomics Institute</sub>
+  <sub>Part of the <b>Bio-VQA</b> benchmark</sub>
 </p>

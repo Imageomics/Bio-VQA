@@ -532,5 +532,5 @@ CUB-200-2011 is distributed for **non-commercial research and educational use**;
 ---
 
 <p align="center">
-  <sub>Part of the <b>Bio-VQA</b> benchmark · Imageomics Institute</sub>
+  <sub>Part of the <b>Bio-VQA</b> benchmark</sub>
 </p>

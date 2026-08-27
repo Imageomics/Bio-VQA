@@ -21,7 +21,6 @@ with HF_HUB_OFFLINE=1 so no task can ever re-download.
 
 Usage
 -----
-    export HF_HOME=/fs/scratch/PAS2136/rayees/hf_cache
     python prefetch_bioclip2.py            # verify, download if needed
     python prefetch_bioclip2.py --clean    # wipe a corrupted cache first
     python prefetch_bioclip2.py --check    # verify only, download nothing
@@ -60,8 +59,7 @@ def main():
 
     hf = os.environ.get("HF_HOME")
     if not hf:
-        sys.exit("ERROR: HF_HOME is not set.\n"
-                 "  export HF_HOME=/fs/scratch/PAS2136/$USER/hf_cache")
+        sys.exit("ERROR: HF_HOME is not set.")
     print(f"[cache] HF_HOME = {hf}")
 
     if args.clean and os.path.isdir(hf):

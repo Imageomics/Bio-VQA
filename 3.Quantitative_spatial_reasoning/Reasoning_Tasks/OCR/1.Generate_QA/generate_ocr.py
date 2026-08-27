@@ -16,11 +16,6 @@ filename stem -- not a model read. Moondream is used only for localisation.
 
 Output filenames MUST stay <stem>.jpg: qa.csv is frozen (models already run).
 
-Usage:
-  python generate_ocr.py \
-      --base_dir "/fs/ess/PAS2136/Rayeed/Bio-VQA/EDA/2018-NEON-Beetles" \
-      --output_dir "/fs/ess/PAS2136/Rayeed/Bio-VQA/1-Spatial-Visual-Reasoning-tasks/Optical Character Recognition - OCR" \
-      --task_id $SLURM_ARRAY_TASK_ID --num_tasks 6
 """
 
 import argparse
