@@ -72,7 +72,7 @@ Comparison with the closest prior benchmarks:
 
 | Benchmark | Domain | Questions | Images | Groups | Taxon | Attr. | Spatial | Individual | Floor |
 | :--- | :--- | ---: | ---: | ---: | :---: | :---: | :---: | :---: | :---: |
-| VLM4Bio | biology | 469K | 30K | 3 | ✔ | ✔ | ~ | ✘ | ✘ |
+| VLM4Bio | biology | 469K | 30K | 3 | ✔ | ✔ | ✘ | ✘ | ✘ |
 | PlantExpertVQA | biology | 765K | 151K | 1 | ~ | ✔ | ✘ | ✘ | ✘ |
 | J-EDI QA | biology | 0.1K | 0.1K | 1 | ✔ | ✘ | ✘ | ✘ | ✘ |
 | AVA-Bench | general | 218K | 218K | — | ✘ | ✔ | ✔ | ✘ | ~ |
