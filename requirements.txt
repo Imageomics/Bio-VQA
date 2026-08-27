@@ -1,0 +1,71 @@
+# ============================================================================
+#  Bio-VQA — Python requirements
+# ============================================================================
+#  Install:
+#      python -m venv myenv && source myenv/bin/activate
+#      pip install -r requirements.txt
+#
+#  IMPORTANT — inference is NOT covered by a single pin. See section 3 below.
+# ============================================================================
+
+
+# ----------------------------------------------------------------------------
+#  1. Core — needed by every stage of every component
+# ----------------------------------------------------------------------------
+numpy>=1.26
+pandas>=2.0
+pillow>=10.0                 # image I/O; header-only reads, compositing, marker rendering
+scipy>=1.11                  # inverse normal CDF for d-prime, statistical tests
+tqdm>=4.66
+
+
+# ----------------------------------------------------------------------------
+#  2. Data acquisition and QA generation
+# ----------------------------------------------------------------------------
+duckdb>=0.10                 # C1: out-of-core SQL over the 200M-row ToL catalog
+pyarrow>=15.0                # C1: Parquet backend for the above
+requests>=2.31               # C1: pooled HTTP session for image download
+
+
+# ----------------------------------------------------------------------------
+#  3. Inference — READ THIS
+# ----------------------------------------------------------------------------
+#  The 18 evaluated models do NOT share a transformers version. Installing one
+#  pin globally will break at least one family. Each SLURM array task therefore
+#  builds a disposable virtual environment in node-local $TMPDIR and installs
+#  the version that model needs; the environment is removed by a trap on exit.
+#
+#      Gemma-4                    transformers @ git HEAD
+#      Qwen3-VL (dense + MoE)     transformers >= current release
+#      all other 16 models        transformers == 4.57.1
+#
+#  The pin below is the majority case and is what a single-model reproduction
+#  should start from. Do not assume it covers Gemma-4 or Qwen3-VL.
+#
+torch>=2.6                   # Gemma-3 raises "Using or_mask_function ... require torch>=2.6"
+torchvision>=0.21
+transformers==4.57.1         # majority pin — see the note above
+accelerate>=0.34
+sentencepiece>=0.2.0         # LLaVA-NeXT Vicuna: "Cannot instantiate this tokenizer from a slow version"
+protobuf>=4.25               # the follow-on ImportError from the same tokenizer path
+einops>=0.8.0                # InternVL remote code imports rearrange at module load
+
+
+# ----------------------------------------------------------------------------
+#  4. Specialist baselines — optional, install only if reproducing the ceilings
+# ----------------------------------------------------------------------------
+#  open_clip_torch>=2.24      # BioCLIP-2, the C1 taxonomic ceiling
+#  wildlife-tools>=0.1        # MegaDescriptor, the C4 re-identification baseline
+#  timm>=1.0                  # DINOv2 backbone for C4 pair mining
+
+
+# ----------------------------------------------------------------------------
+#  5. Notes
+# ----------------------------------------------------------------------------
+#  * No shell scripts are committed. Launch commands live in the per-component
+#    READMEs; adapt them to your scheduler.
+#  * pip install --timeout 60 is used inside the array tasks: a truncated PyPI
+#    read killed one task in an earlier sweep.
+#  * Image download (C1) is network- and I/O-bound. Request CPU nodes.
+#  * Inference needs one H100-class GPU per array task; the 30B-38B models
+#    need two.
