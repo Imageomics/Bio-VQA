@@ -6,7 +6,7 @@
 
 <p align="center">
   <img alt="Questions" src="https://img.shields.io/badge/questions-1.87M-green">
-  <img alt="Images" src="https://img.shields.io/badge/images-216K-blue">
+  <img alt="Images" src="https://img.shields.io/badge/images-217K-blue">
   <img alt="Datasets" src="https://img.shields.io/badge/source%20datasets-11-yellow">
   <img alt="Groups" src="https://img.shields.io/badge/organismal%20groups-10-orange">
   <img alt="Models" src="https://img.shields.io/badge/models%20evaluated-18-purple">
