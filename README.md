@@ -52,8 +52,7 @@ datasets**, organised into four components:
 - [Headline Results](#headline-results)
 - [Cross-Component Structure](#cross-component-structure)
 - [Reproducibility](#reproducibility)
-- [FAQ](#faq)
-- [Citation](#citation)
+- [References](#references)
 
 ---
 
@@ -297,7 +296,137 @@ within C1, gymnosperms (.183) — the group with the thinnest source coverage.
 manifests rather than expecting to regenerate them byte-for-byte.
 
 
+## References
+ 
+Every source dataset, baseline, model, metric and benchmark referenced by
+Bio-VQA or by any component README. The `key` column is the BibTeX key used in
+the paper, so entries can be cross-referenced against the manuscript's `.bib`
+directly.
+ 
+**All source imagery retains its original license.** This repository
+distributes code and metadata only. Verify licensing before redistributing any
+downloaded imagery.
+ 
+### Source datasets
+ 
+Eleven public datasets supply every image and every ground-truth annotation. A question is generated only where an existing annotation supplies the answer.
+ 
+| Dataset | Key | Used by |
+|---|---|---|
+| TreeOfLife-200M | `stevens2025bioclip2` | C1 — 100K image subset, 10 organismal groups |
+| CUB-200-2011 | `wah2011caltech` | C2 — 11,788 images, 312 binary attributes |
+| WAID | `waid2023` | C3 — aerial wildlife: camel, cattle, kiang, seal, sheep, zebra |
+| Boxes on Bees and Pollen | `boxesonbees` | C3 — dense hive frames |
+| 2018-NEON-beetles | `neonbeetles` | C3 — specimen trays with scalebars |
+| DePondFi | `depondfi` | C3 — pond fish |
+| GZCD | `gzcd` | C3 + C4 — Grevy's zebra |
+| WhaleSharkID | `whalesharkid` | C4 — spot pattern |
+| BelugaID | `belugaid` | C4 — scarring, dorsal ridge |
+| HyenaID | `hyenaid` | C4 — spot pattern |
+| LeopardID | `leopardid` | C4 — rosette pattern |
+ 
+### Specialist baselines and encoders
+ 
+BioCLIP-2 and MegaDescriptor are the measured ceilings for C1 and C4. DINOv2 is used for C4 pair mining, not as a baseline. The remaining entries are the re-identification literature the component situates itself against.
+ 
+| Model | Key | Role |
+|---|---|---|
+| BioCLIP-2 | `stevens2025bioclip2` | C1 taxonomic ceiling |
+| BioCLIP | `stevens2024bioclip` | predecessor; tree-of-life scale contrastive |
+| BioTrove-CLIP | `biotrove2024` | alternative biological encoder |
+| MegaDescriptor | `cermak2024wildlifedatasets` | C4 specialist baseline |
+| DINOv2 | `oquab2024dinov2` | C4 pair mining by embedding similarity |
+| MiewID | `otarashvili2024miewid` | multi-species re-ID descriptor |
+| HotSpotter | `crall2013hotspotter` | hand-crafted local features for re-ID |
+| PIE | `moskvyak2019pie` | learned re-ID embeddings |
+| ALFReID | `nepovinnykh2024alfreid` | learned re-ID embeddings |
+| TransReID | `he2021transreid` | transformer re-ID |
+ 
+### Evaluated models
+ 
+Eighteen open-weight models from 3.75B to 38.4B parameters. Two of the 30B models are mixture-of-experts activating 3B parameters per token.
+ 
+| Family | Key | Sizes evaluated |
+|---|---|---|
+| Qwen2.5-VL | `qwen25vl` | 3.75B, 8.3B |
+| Qwen3-VL | `qwen3vl` | 8.8B, 30.5B MoE, 32.8B |
+| InternVL3 | `internvl3` | 8.1B, 38.4B |
+| InternVL3.5 | `internvl35` | 8.1B, 30.5B MoE, 38.4B |
+| Gemma-3 | `gemma3` | 12.2B |
+| Gemma-4 | `gemma4` | 12.2B |
+| Molmo 2 | `molmo2` | 8.0B, pointing-supervised |
+| Pixtral | `pixtral` | 12.4B |
+| Phi-3.5-Vision | `phi35` | 4.2B |
+| Llama-3.2-Vision | `llama32` | 10.7B |
+| LLaVA-NeXT | `llavanext` | 7.1B Vicuna, 7.6B Mistral |
+ 
+### Metrics and statistical methods
+ 
+Every graded metric is reported alongside the exact match it modifies.
+ 
+| Method | Key | Used for |
+|---|---|---|
+| Wu–Palmer similarity | `wu1994verb` | C1 — depth of the lowest common ancestor |
+| Lin similarity | `lin1998information` | C1 — information-content weighted |
+| Open-ended taxonomic evaluation | `ging2024openended` | C1 — hierarchical scoring precedent |
+| Cohen's kappa | `cohen1960coefficient` | C2/C3 — chance correction |
+| Signal detection theory | `green1966signal` | C4 — d-prime and criterion |
+| Detection theory | `macmillan2004detection` | C4 — d-prime and criterion |
+| Log-linear correction | `hautus1995` | C4 — required when H or F reaches 0 or 1 |
+| Labeled Faces in the Wild | `lfw2007` | C4 — the verification protocol |
+ 
+### Evaluation protocol
+ 
+| Element | Key | Setting |
+|---|---|---|
+| Greedy decoding | `holtzman2020` | no sampling |
+| Prompt sensitivity | `sclar2024` | fixed system prompt per question family |
+| Chain-of-thought | `wei2022cot` | explicitly NOT used |
+| Few-shot prompting | `brown2020few` | explicitly NOT used |
+ 
+### Related benchmarks
+ 
+| Benchmark | Key | Relevance |
+|---|---|---|
+| VLM4Bio | `vlm4bio2024` | closest prior biological VQA |
+| PlantExpertVQA | `plantexpertvqa2025` | crop diseases |
+| J-EDI QA | `jediqa2024` | 100 deep-sea images |
+| AgroCoT | `agrocot2025` | agricultural chain-of-thought |
+| AVA-Bench | `avabench2026` | atomic visual skills — the decomposition precedent |
+| MMBench | `liu2024mmbench` | general multi-task |
+| SEED-Bench | `li2023seedbench` | general multi-task |
+| BLINK | `fu2024blink` | general perception |
+| MMVP | `tong2024eyes` | visual patterns |
+| CV-Bench / Cambrian | `tong2024cambrian` | counting comparison |
+| MM-Spatial | `mmspatial2025` | spatial reasoning; blind-baseline result |
+| ScienceQA | `lu2022scienceqa` | expert-domain VQA |
+| MMMU | `yue2024mmmu` | expert ceilings |
+| MicroVQA | `burgess2025microvqa` | microscopy |
+| TallyQA | `tallyqa2019` | counting |
+| CountBench | `paiss2023countbench` | counting |
+| VSR | `liu2023vsr` | spatial relations |
+| SpatialVLM | `chen2024spatialvlm` | spatial reasoning |
+| INQUIRE | `vendrow2024inquire` | biodiversity retrieval |
+| IUCN LLM evaluation | `iucnllm2026` | biodiversity, no imagery |
+| Animal re-ID survey | `animalreid2026` | no VLMs reported |
+ 
+### Taxonomic infrastructure
+ 
+| Resource | Key | Used for |
+|---|---|---|
+| GBIF Backbone | `gbif2024` | versioned snapshot; synonym map, accepted names |
+| iNaturalist | `inaturalist2024` | common-name resolution to English |
+| Wikidata | `wikidata` | common-name resolution to English |
+ 
+### A note on anonymity
+ 
+If this repository accompanies a double-blind submission, check the reference
+list for **self-citations** before publishing. Prior work by the same authors
+is identifying even when the repository itself carries no names, and it is the
+most common way an anonymised artifact is deanonymised.
+ 
 ---
+
 
 <p align="center">
   <sub><b>Bio-VQA</b> &middot; code and metadata only &middot; images retain their original licenses</sub>
